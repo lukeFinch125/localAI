@@ -1,0 +1,5 @@
+psycopg==3.3.2
+colorama==0.4.6
+chromadb==1.3.7
+tqdm==4.67.1
+ollama==0.6.1
