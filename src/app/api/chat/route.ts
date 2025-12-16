@@ -1,20 +1,30 @@
-"use server"
+import ollama from "ollama";
 
-import ollama from 'ollama'
+export async function POST(req: Request) {
+    const { message } = await req.json();
 
-interface responseInterface {
-    message: string,
-}
-
-export const getResponse = async({ message } : responseInterface) => {
-    const response = await ollama.chat({
+    const stream = await ollama.chat({
         model: "llama2",
-        messages:[{
-            role: 'user',
-            content: message,
-        }]
-    })
+        messages: [{ role: "user", content: message }],
+        stream: true,
+    });
 
-    console.log(response.message.content)
-    return response.message.content;
+    const encoder = new TextEncoder();
+
+    const readable = new ReadableStream({
+        async start(controller) {
+            for await (const part of stream) {
+                controller.enqueue(
+                    encoder.encode(part.message?.content || "")
+                );
+            }
+            controller.close();
+        },
+    });
+
+    return new Response(readable, {
+        headers: {
+            "Content-Type": "text/plain; charset=utf-8",
+        },
+    });
 }
