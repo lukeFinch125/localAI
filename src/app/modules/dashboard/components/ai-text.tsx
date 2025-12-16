@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import InputFile from "./input-file";
 
 interface AIItextInteface {
@@ -10,11 +10,14 @@ interface AIItextInteface {
 }
 
 const AIText = ({ currentModel } : AIItextInteface) => {
-    const [message, setMessage] = useState("");
     const [prompt, setPrompt] = useState("");
     const [response, setResponse] = useState("");
     const [isInputFile, setIsInputFile] = useState(false);
     const [inputFileTxt, setInputFileTxt] = useState("");
+    
+    type ChatMessage = { role: "user" | "assistant"; content: string};
+
+    const convoRef = useRef<ChatMessage[]>([]);
     
 
     const handleSubmit = async () => {
@@ -33,14 +36,11 @@ const AIText = ({ currentModel } : AIItextInteface) => {
             finalMessage = prompt;
         }
 
-        setMessage(finalMessage);
-
-        console.log("Input file present: " + isInputFile);
-        console.log("message to AI: " + finalMessage);
+        convoRef.current.push({ role: "user", content: finalMessage });
 
         const res = await fetch("/api/chat", {
             method: "POST",
-            body: JSON.stringify({ message: finalMessage, model: currentModel }),
+            body: JSON.stringify({ messages: convoRef.current, model: currentModel }),
         });
 
         if (!res.body) return;
@@ -54,6 +54,8 @@ const AIText = ({ currentModel } : AIItextInteface) => {
 
             setResponse((prev) => prev + decoder.decode(value));
         }
+
+        convoRef.current.push({ role: "assistant", content: response});
     };
 
     return (
