@@ -1,10 +1,10 @@
 import ollama from "ollama";
 
 export async function POST(req: Request) {
-    const { message } = await req.json();
+    const { message, model } = await req.json();
 
     const stream = await ollama.chat({
-        model: "llama2",
+        model: model,
         messages: [{ role: "user", content: message }],
         stream: true,
     });

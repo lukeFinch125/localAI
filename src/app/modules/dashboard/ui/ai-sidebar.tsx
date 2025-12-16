@@ -10,13 +10,21 @@ import {
 } from "@/components/ui/sidebar"
 import ModelList from "./ai-models-list";
 
-const AISidebar = () => {
+interface AISidebarIntereface {
+  currentModel: string;
+  setCurrentModel: (model: string) => void;
+}
+
+const AISidebar = ({ currentModel, setCurrentModel}: AISidebarIntereface) => {
     return ( 
         <Sidebar>
             <SidebarContent>
               <SidebarGroupLabel>AI Models</SidebarGroupLabel>
               <SidebarGroup />
-                <ModelList />
+                <ModelList 
+                  currentModel={currentModel}
+                  setCurrentModel={setCurrentModel}
+                />
               <SidebarGroup />
             </SidebarContent>
         </Sidebar>

@@ -4,7 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 
-const AIText = () => {
+interface AIItextInteface {
+    currentModel: string;
+}
+
+const AIText = ({ currentModel } : AIItextInteface) => {
     const [message, setMessage] = useState("");
     const [response, setResponse] = useState("");
 
@@ -13,7 +17,7 @@ const AIText = () => {
 
         const res = await fetch("/api/chat", {
             method: "POST",
-            body: JSON.stringify({ message }),
+            body: JSON.stringify({ message, model: currentModel }),
         });
 
         if (!res.body) return;
@@ -30,7 +34,8 @@ const AIText = () => {
     };
 
     return (
-        <div className="flex flex-col gap-2 p-4">
+        <div className="flex flex-col gap-2 p-4 border-2">
+            <h4>Current Model: {currentModel}</h4>
             <Input
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}

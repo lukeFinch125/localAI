@@ -1,9 +1,17 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 
-const ModelList = () => {
+interface AISidebarIntereface {
+  currentModel: string;
+  setCurrentModel: (model: string) => void;
+}
+
+const ModelList = ({ currentModel, setCurrentModel}: AISidebarIntereface) => {
     const [models, setModels] = useState<string[]>([]);
+    
 
     useEffect(() => {
         fetch("/api/models")
@@ -11,10 +19,19 @@ const ModelList = () => {
             .then(setModels);
     }, []);
 
+    console.log(currentModel);
+
     return (
-        <ul>
+        <ul className="flex flex-col gap-2 p-4">
             {models.map(model => (
-                <li key={model}>{model}</li>
+                <Button 
+                    key={model}
+                    onClick={
+                        () => setCurrentModel(model)}
+                    className={cn("border-2 border-white", model === currentModel && "border-green-500")}
+                >
+                    {model}
+                </Button>
             ))}
         </ul>
     );
