@@ -11,15 +11,7 @@ interface AISidebarIntereface {
 
 const ModelList = ({ currentModel, setCurrentModel}: AISidebarIntereface) => {
     const [models, setModels] = useState<string[]>([]);
-    
 
-    useEffect(() => {
-        fetch("/api/models")
-            .then(res => res.json())
-            .then(setModels);
-    }, []);
-
-    console.log(currentModel);
 
     return (
         <ul className="flex flex-col gap-2 p-4">

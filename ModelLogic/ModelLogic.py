@@ -7,6 +7,8 @@ from psycopg.rows import dict_row
 from colorama import Fore
 
 client = chromadb.Client()
+chatModel = "llama3.1"
+encodingModel = "nomic-embed-text:latest"
 
 system_prompt = (
     'You are an AI assistant that has memory of every conversation you have ever had with the user.'
@@ -18,6 +20,7 @@ system_prompt = (
 )
 
 convo = [{'role': 'system', 'content': system_prompt}]
+
 
 DB_PARAMS = {
     'dbname': 'memory_agent',
@@ -55,7 +58,7 @@ def remove_last_conversation():
 
 def stream_response(prompt):
     response = ''
-    stream = ollama.chat(model='llama3.1', messages=convo, stream=True)
+    stream = ollama.chat(model=chatModel, messages=convo, stream=True)
     print(Fore.LIGHTGREEN_EX + '\nASSISTANT:')
 
     for chunk in stream:
@@ -79,7 +82,7 @@ def create_vector_db(conversations):
 
     for c in conversations:
         serialized_convo = f'prompt: {c['prompt']} response: {c['response']}'
-        response = ollama.embeddings(model='nomic-embed-text:latest', prompt=serialized_convo)
+        response = ollama.embeddings(model=encodingModel, prompt=serialized_convo)
         embedding = response['embedding']
 
         vector_db.add(
@@ -92,7 +95,7 @@ def retrieve_embeddings(queries, results_per_query=2):
     embeddings = set()
 
     for query in tqdm(queries, desc='Processing queries to vector database'):
-        response = ollama.embeddings(model='nomic-embed-text:latest', prompt=query)
+        response = ollama.embeddings(model=encodingModel, prompt=query)
         query_embedding = response['embedding']
 
         vector_db = client.get_collection(name='conversations')
@@ -125,7 +128,7 @@ def create_queries(prompt):
         {'role': 'user', 'content': prompt}
     ]
 
-    response = ollama.chat(model='llama3.1', messages=query_convo)
+    response = ollama.chat(model=chatModel, messages=query_convo)
     print(Fore.YELLOW + f'\nVector database queries: {response["message"]["content"]}\n')
 
     try:
@@ -150,7 +153,7 @@ def classify_embedding(query, context):
         {'role': 'user', 'content': f'SEARCH QUERY: {query} \n\nEMBEDDED CONTEXT: {context}'}
     ]
 
-    response = ollama.chat(model='llama3.1', messages=classify_convo)
+    response = ollama.chat(model=chatModel, messages=classify_convo)
 
     return response['message']['content'].strip().lower()
 
@@ -159,6 +162,9 @@ def recall(prompt):
     embeddings = retrieve_embeddings(queries=queries)
     convo.append({'role': 'user', 'content': f'MEMORIES: {embeddings} \n\n USER PROMPT: {prompt}'})
     print(f'\n{len(embeddings)} message: response embeddings added for context.')
+
+def search(prompt):
+    print("searching")
 
 conversations = fetch_conversations()
 create_vector_db(conversations=conversations)
@@ -169,6 +175,10 @@ while True:
     if prompt[:7].lower() == '/recall':
         prompt = prompt[8:]
         recall(prompt=prompt)
+        stream_response(prompt=prompt)
+    elif prompt[:7].lower() == '/search':
+        prompt = prompt[8:]
+        search(prompt=prompt)
         stream_response(prompt=prompt)
     elif prompt[:7].lower() == '/forget':
         remove_last_conversation()
