@@ -28,6 +28,11 @@ DB_PARAMS = {
     'host': '/run/postgresql',
 }
 
+def list_models():
+    result = ollama.list()
+    return [model["model"] for model in result["models"]]
+
+
 def connect_db():
     conn = psycopg.connect(**DB_PARAMS)
     return conn
@@ -69,6 +74,14 @@ def stream_response(prompt):
     print('\n')
     store_conversations(prompt=prompt, response=response)
     convo.append({'role': 'assistant', 'content': response})
+
+def standard_response(prompt):
+    response = ollama.chat(model=chatModel, messages=convo)
+    responseString = response["message"]["content"]
+    print(Fore.LIGHTGREEN_EX + '\nASSISTANT: \n ' + responseString)
+    store_conversations(prompt=prompt, response=responseString)
+    convo.append({'role': 'assistant', 'content': responseString})
+    return responseString
 
 def create_vector_db(conversations):
     vector_db_name = 'conversations'
@@ -209,7 +222,9 @@ def handle_prompt(prompt: str) -> str:
         }
     else:
         convo.append({'role': 'user', 'content': clean_prompt})
-        response = stream_response(prompt=prompt)
+        response = standard_response(prompt=prompt)
+        print("else statement")
+        print(response)
         return {
             "prompt": prompt,
             "response": response,

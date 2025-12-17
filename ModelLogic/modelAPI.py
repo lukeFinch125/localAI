@@ -8,7 +8,8 @@ from ModelLogic import (
     convo,
     stream_response,
     recall,
-    handle_prompt
+    handle_prompt,
+    list_models
 )
 
 app = FastAPI()
@@ -37,3 +38,7 @@ def run_prompt(request: PromptRequest):
         "prompt": user_prompt,
         "response": response
     }
+
+@app.get("/modelList")
+def get_list():
+    return list_models()
