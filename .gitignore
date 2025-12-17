@@ -42,3 +42,4 @@ next-env.d.ts
 
 #python vritual environemnt
 **/.venv/
+**/_pycache_/

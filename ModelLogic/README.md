@@ -15,3 +15,6 @@ psql
 
 exit database:
 \q
+
+start api:
+uvicorn modelAPI:app --reload(no need to start ModelLogic now)

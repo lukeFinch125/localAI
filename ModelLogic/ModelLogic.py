@@ -11,12 +11,12 @@ chatModel = "llama3.1"
 encodingModel = "nomic-embed-text:latest"
 
 system_prompt = (
-    'You are an AI assistant that has memory of every conversation you have ever had with the user.'
-    'On every prompt from the user, the system has checked for any relevant messages you have had with the user.'
-    'If any embedded previous conversations are attached, use them for context to responding to the user,'
-    'if the context is relevant and useful to responding. If the realled conversation is irrelevant,'
-    'disregard speaking about them and respond normally as an AI assistant. Do not talk about recalling conversations.'
-    'Just use any useful data from the previous conversations and respond normally as an intelligent AI assistant.'
+'You are an AI assistant that has memory of every conversation you have ever had with the user.'
+'On every prompt from the user, the system has checked for any relevant messages you have had with the user.'
+'If any embedded previous conversations are attached, use them for context to responding to the user,'
+'if the context is relevant and useful to responding. If the realled conversation is irrelevant,'
+'disregard speaking about them and respond normally as an AI assistant. Do not talk about recalling conversations.'
+'Just use any useful data from the previous conversations and respond normally as an intelligent AI assistant.'
 )
 
 convo = [{'role': 'system', 'content': system_prompt}]
@@ -169,27 +169,48 @@ def search(prompt):
 conversations = fetch_conversations()
 create_vector_db(conversations=conversations)
 
-while True:
-    prompt = input(Fore.WHITE + 'USER: \n')
+def handle_prompt(prompt: str) -> str:
+    global convo
 
-    if prompt[:7].lower() == '/recall':
-        prompt = prompt[8:]
-        recall(prompt=prompt)
-        stream_response(prompt=prompt)
-    elif prompt[:7].lower() == '/search':
-        prompt = prompt[8:]
-        search(prompt=prompt)
-        stream_response(prompt=prompt)
-    elif prompt[:7].lower() == '/forget':
+    clean_prompt = prompt.strip()
+
+    if clean_prompt.lower().startswith("/recall"):
+        clean_prompt = clean_prompt[8:].strip()
+        recall(prompt=clean_prompt)
+        response = stream_response(prompt=clean_prompt)
+        return {
+            "prompt": prompt,
+            "response": response
+        }
+
+    elif clean_prompt.lower().startswith("/search"):
+        clean_prompt = clean_prompt[8:].strip()
+        search(clean_prompt)
+        response = stream_response(prompt=clean_prompt)
+        return {
+            "prompt": prompt,
+            "response": response
+        }
+
+    elif clean_prompt.lower().startswith("/forget"):
         remove_last_conversation()
         convo = convo[:-2]
-        print('\n')
-    elif prompt[:9].lower() == '/memorize':
-        prompt = prompt[10:]
-        store_conversations(prompt=prompt, response='Memory stored. ')
-        print('\n')
+        return {
+            "prompt": prompt,
+            "response": "Forgotten by Model"
+        }
+        
+    elif clean_prompt.lower().startswith("/memorize"):
+        clean_prompt = clean_prompt[10:].strip()
+        store_conversations(prompt=clean_prompt, response='Memory stored. ')
+        return {
+            "prompt": prompt,
+            "response": "Memory stored. "
+        }
     else:
-        convo.append({'role': 'user', 'content': prompt})
-        stream_response(prompt=prompt)
-
-    stream_response(prompt=prompt)
+        convo.append({'role': 'user', 'content': clean_prompt})
+        response = stream_response(prompt=prompt)
+        return {
+            "prompt": prompt,
+            "response": response,
+        }
