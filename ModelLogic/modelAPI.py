@@ -5,14 +5,27 @@ from pydantic import BaseModel
 from ModelLogic import (
     chatModel,
     encodingModel,
-    convo,
-    stream_response,
-    recall,
     handle_prompt,
-    list_models
+    list_models,
+    set_chat_model
 )
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+
+
+origins = [
+    "http://localhost:3000",  # React dev server
+    "http://127.0.0.1:3000",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,  # or ["*"] for dev
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/")
 def read_root():
@@ -42,3 +55,13 @@ def run_prompt(request: PromptRequest):
 @app.get("/modelList")
 def get_list():
     return list_models()
+
+class SetChatModelRequest(BaseModel):
+    newModel: str
+
+@app.post("/setChatModel")
+def setChatModel(request: SetChatModelRequest):
+    response = set_chat_model(request.newModel)
+    return {
+        "response": response
+    }

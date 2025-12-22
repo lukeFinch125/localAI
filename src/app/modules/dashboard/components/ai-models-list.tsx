@@ -1,5 +1,6 @@
 "use client";
 
+import { getModels, ModelsResponse } from "@/api/modelClient";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
@@ -10,12 +11,29 @@ interface AISidebarIntereface {
 }
 
 const ModelList = ({ currentModel, setCurrentModel}: AISidebarIntereface) => {
-    const [models, setModels] = useState<string[]>([]);
 
+    const [modelList, setModelList] = useState<ModelsResponse | null>();
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(false);
+
+    useEffect(() => {
+        async function loadModels() {
+            try {
+                const data = await getModels();
+                console.log("API response:", data);
+                setModelList(data);
+            } catch (err) {
+                setError(true);
+            } finally {
+                setLoading(false);
+            }
+        }
+        loadModels();
+    }, []);
 
     return (
         <ul className="flex flex-col gap-2 p-4">
-            {models.map(model => (
+            {modelList?.models.map(model => (
                 <Button 
                     key={model}
                     onClick={

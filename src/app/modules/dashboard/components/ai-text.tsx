@@ -21,41 +21,7 @@ const AIText = ({ currentModel } : AIItextInteface) => {
     
 
     const handleSubmit = async () => {
-
-        setResponse("");
-
-        let finalMessage = "";
-
-        if (isInputFile) {
-            finalMessage =
-                "Here is an input file txt to help you answer my upcoming question:\n\n" +
-                inputFileTxt +
-                "\n\nThat is the end of the article. Here is my question:\n" +
-                prompt;
-        } else {
-            finalMessage = prompt;
-        }
-
-        convoRef.current.push({ role: "user", content: finalMessage });
-
-        const res = await fetch("/api/chat", {
-            method: "POST",
-            body: JSON.stringify({ messages: convoRef.current, model: currentModel }),
-        });
-
-        if (!res.body) return;
-
-        const reader = res.body.getReader();
-        const decoder = new TextDecoder();
-
-        while (true) {
-            const { value, done } = await reader.read();
-            if (done) break;
-
-            setResponse((prev) => prev + decoder.decode(value));
-        }
-
-        convoRef.current.push({ role: "assistant", content: response});
+        
     };
 
     return (

@@ -10,6 +10,17 @@ client = chromadb.Client()
 chatModel = "llama3.1"
 encodingModel = "nomic-embed-text:latest"
 
+def set_chat_model(model: str):
+    global chatModel
+    chatModel = model
+    print("New Chat Model: " + model)
+
+def set_encoding_model(model: str):
+    global encodingModel
+    encodingModel = model
+    print("New encoding Model: " + model)
+
+
 system_prompt = (
 'You are an AI assistant that has memory of every conversation you have ever had with the user.'
 'On every prompt from the user, the system has checked for any relevant messages you have had with the user.'
@@ -54,7 +65,7 @@ def store_conversations(prompt, response):
         conn.commit()
     conn.close()
 
-def remove_last_conversation():
+def remove_last_conversation():#this is broken
     conn = connect_db()
     with conn.cursor() as cursor:
         cursor.execute('DELETE FROM conversations WHERE id = (SELECT MAX(id) FROM conversations)')

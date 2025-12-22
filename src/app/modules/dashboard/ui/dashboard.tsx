@@ -2,7 +2,7 @@
 
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import AIText from "../components/ai-text";
-import AISidebar from "./ai-sidebar";
+import AISidebar from "../components/ai-sidebar";
 import { useState } from "react";
 
 const DashBoard = () => {

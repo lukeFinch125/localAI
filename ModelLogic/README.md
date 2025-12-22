@@ -18,3 +18,6 @@ exit database:
 
 start api:
 uvicorn modelAPI:app --reload(no need to start ModelLogic now)
+
+test website:
+http://127.0.0.1:8000/docs
