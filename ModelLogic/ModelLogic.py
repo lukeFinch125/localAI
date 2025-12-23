@@ -202,41 +202,25 @@ def handle_prompt(prompt: str) -> str:
         clean_prompt = clean_prompt[8:].strip()
         recall(prompt=clean_prompt)
         response = stream_response(prompt=clean_prompt)
-        return {
-            "prompt": prompt,
-            "response": response
-        }
+        return response
 
     elif clean_prompt.lower().startswith("/search"):
         clean_prompt = clean_prompt[8:].strip()
         search(clean_prompt)
         response = stream_response(prompt=clean_prompt)
-        return {
-            "prompt": prompt,
-            "response": response
-        }
+        return response
 
     elif clean_prompt.lower().startswith("/forget"):
         remove_last_conversation()
         convo = convo[:-2]
-        return {
-            "prompt": prompt,
-            "response": "Forgotten by Model"
-        }
+        return "Forgotten by Model"
         
     elif clean_prompt.lower().startswith("/memorize"):
         clean_prompt = clean_prompt[10:].strip()
         store_conversations(prompt=clean_prompt, response='Memory stored. ')
-        return {
-            "prompt": prompt,
-            "response": "Memory stored. "
-        }
+        return "Memory stored. "
+
     else:
         convo.append({'role': 'user', 'content': clean_prompt})
         response = standard_response(prompt=prompt)
-        print("else statement")
-        print(response)
-        return {
-            "prompt": prompt,
-            "response": response,
-        }
+        return response

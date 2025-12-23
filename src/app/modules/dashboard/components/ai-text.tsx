@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useRef, useState } from "react";
 import InputFile from "./input-file";
+import { Console } from "console";
+import { getResponse } from "@/api/modelClient";
 
 interface AIItextInteface {
     currentModel: string;
@@ -14,14 +16,21 @@ const AIText = ({ currentModel } : AIItextInteface) => {
     const [response, setResponse] = useState("");
     const [isInputFile, setIsInputFile] = useState(false);
     const [inputFileTxt, setInputFileTxt] = useState("");
+    const [loading, setLoading] = useState(false);
     
-    type ChatMessage = { role: "user" | "assistant"; content: string};
-
-    const convoRef = useRef<ChatMessage[]>([]);
-    
-
     const handleSubmit = async () => {
-        
+        try {
+            setLoading(true)
+
+            const data = await getResponse(prompt);
+            console.log(data);
+            setResponse(data.response);
+        } catch (err) {
+            console.log(err);
+            setResponse("Error fetching response");
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (

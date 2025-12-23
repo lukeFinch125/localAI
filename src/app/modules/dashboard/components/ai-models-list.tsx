@@ -1,6 +1,6 @@
 "use client";
 
-import { getModels, ModelsResponse } from "@/api/modelClient";
+import { getModels, getModelsResponse } from "@/api/modelClient";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
@@ -12,7 +12,7 @@ interface AISidebarIntereface {
 
 const ModelList = ({ currentModel, setCurrentModel}: AISidebarIntereface) => {
 
-    const [modelList, setModelList] = useState<ModelsResponse | null>();
+    const [modelList, setModelList] = useState<getModelsResponse | null>();
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
 
@@ -20,7 +20,6 @@ const ModelList = ({ currentModel, setCurrentModel}: AISidebarIntereface) => {
         async function loadModels() {
             try {
                 const data = await getModels();
-                console.log("API response:", data);
                 setModelList(data);
             } catch (err) {
                 setError(true);

@@ -4,10 +4,13 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import AIText from "../components/ai-text";
 import AISidebar from "../components/ai-sidebar";
 import { useState } from "react";
+import { getCurrentModel } from "@/api/modelClient";
 
 const DashBoard = () => {
 
-    const [currentModel, setCurrentModel] = useState("llama2:latest");
+    const [currentModel, setCurrentModel] = useState("");
+    const model = getCurrentModel();
+    setCurrentModel(model);
 
     return (
         <SidebarProvider>
