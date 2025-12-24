@@ -7,7 +7,11 @@ from ModelLogic import (
     encodingModel,
     handle_prompt,
     list_models,
-    set_chat_model
+    set_chat_model,
+    toggle_recall_mode,
+    toggle_search_mode,
+    searchMode,
+    recallMode
 )
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -31,6 +35,8 @@ app.add_middleware(
 def read_root():
     return {"message": "Hello World"}
 
+
+#get models
 @app.get("/activeModel")
 def read_activeModel():
     return {"activeModel" : chatModel}
@@ -39,6 +45,7 @@ def read_activeModel():
 def read_activeModel():
     return {"encodingModel" : encodingModel}
 
+#prompt base api
 class PromptRequest(BaseModel):
     prompt: str
 
@@ -49,19 +56,54 @@ def run_prompt(request: PromptRequest):
 
     return {
         "prompt": user_prompt,
-        "response": response
+        "response": response,
+        "model": chatModel
     }
 
+#return local ollama model list
 @app.get("/modelList")
 def get_list():
     return list_models()
 
+
+#change chat model 
 class SetChatModelRequest(BaseModel):
-    newModel: str
+    chatModel: str
 
 @app.post("/setChatModel")
-def setChatModel(request: SetChatModelRequest):
-    response = set_chat_model(request.newModel)
+def set_chat_model(request: SetChatModelRequest):
+    response = set_chat_model(request.chatModel)
+    global chatModel
+    chatModel = response
     return {
         "response": response
     }
+
+
+#Search Mode
+@app.post("/ToggleSearchMode")
+def flip_search_mode():
+    response = toggle_search_mode()
+    return response
+
+@app.get("/getSearchMode")
+def get_search_mode():
+    global searchMode
+    print("Search Mode:")
+    print(searchMode)
+    return searchMode
+
+#Recall Mode
+@app.post("/ToggleRecallMode")
+def flip_recall_mode():
+    response = toggle_recall_mode()
+    return response
+
+@app.get("/getRecallMode")
+def get_recall_mode():
+    global recallMode
+    print("Recall Mode:")
+    print(recallMode)
+    return recallMode
+
+    

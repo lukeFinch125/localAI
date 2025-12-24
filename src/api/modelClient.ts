@@ -34,18 +34,14 @@ export async function getResponse(prompt: string): Promise<promptResponse> {
     return res.json();
 }
 
-export interface setChatModelResponse {
-    response: string;
-}
-
-export async function setChatModel(newModel: string): Promise<setChatModelResponse> {
+export async function setChatModel(newModel: string): Promise<chatModel> {
     const res = await fetch(`${API_BASE}/setChatModel`, {
         method: "POST",
         headers: {
             "Content-type": "application/json"
         },
         body: JSON.stringify({
-            newModel: newModel
+            chatModel: newModel
         }),
     });
 
@@ -56,14 +52,21 @@ export async function setChatModel(newModel: string): Promise<setChatModelRespon
     return res.json();
 }
 
-export interface getCurrentModelResponse {
-    currentMode: string;
+export type chatModel = {
+    activeModel: string;
 }
 
-export async function getCurrentModel(): Promise<getCurrentModelResponse> {
+export async function getCurrentModel(): Promise<string> {
     const res = await fetch(`${API_BASE}/activeModel`);
-    if (!res.ok) throw new Error("Failed to fetch model");
-    const model = await res.json();
-    return model;
+    
+    if(!res.ok) {
+        throw new Error(`Failed to fetch chat model: ${res.status}`);
+    }
+
+
+    const data = (await res.json()) as chatModel;
+
+    console.log(data);
+    return data.activeModel;
 }
 

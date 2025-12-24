@@ -9,16 +9,40 @@ from colorama import Fore
 client = chromadb.Client()
 chatModel = "llama3.1"
 encodingModel = "nomic-embed-text:latest"
+recallMode = False
+searchMode = False
+
+def toggle_recall_mode():
+    global recallMode
+    if recallMode == True:
+        recallMode = False
+    else:
+        recallMode = True
+    print("Toggled Recall Mode: ")
+    print(recallMode)
+    return recallMode
+
+def toggle_search_mode():
+    global searchMode
+    if searchMode == True:
+        searchMode = False
+    else:
+        searchMode = True
+    print("Toggled Search Mode: ")
+    print(searchMode)
+    return searchMode
 
 def set_chat_model(model: str):
     global chatModel
     chatModel = model
     print("New Chat Model: " + model)
+    return chatModel
 
 def set_encoding_model(model: str):
     global encodingModel
     encodingModel = model
     print("New encoding Model: " + model)
+    return encodingModel
 
 
 system_prompt = (
@@ -195,19 +219,19 @@ create_vector_db(conversations=conversations)
 
 def handle_prompt(prompt: str) -> str:
     global convo
+    global recallMode
+    global searchMode
 
     clean_prompt = prompt.strip()
 
-    if clean_prompt.lower().startswith("/recall"):
-        clean_prompt = clean_prompt[8:].strip()
+    if recallMode == True:
         recall(prompt=clean_prompt)
-        response = stream_response(prompt=clean_prompt)
+        response = standard_response(prompt=clean_prompt)
         return response
 
-    elif clean_prompt.lower().startswith("/search"):
-        clean_prompt = clean_prompt[8:].strip()
+    elif searchMode == True:
         search(clean_prompt)
-        response = stream_response(prompt=clean_prompt)
+        response = standard_response(prompt=clean_prompt)
         return response
 
     elif clean_prompt.lower().startswith("/forget"):
@@ -222,5 +246,5 @@ def handle_prompt(prompt: str) -> str:
 
     else:
         convo.append({'role': 'user', 'content': clean_prompt})
-        response = standard_response(prompt=prompt)
+        response = standard_response(prompt=clean_prompt)
         return response
