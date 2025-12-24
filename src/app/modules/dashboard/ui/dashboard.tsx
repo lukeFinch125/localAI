@@ -5,6 +5,7 @@ import AIText from "../components/ai-text";
 import AISidebar from "../components/ai-sidebar";
 import { useEffect, useState } from "react";
 import { getCurrentModel } from "@/api/modelClient";
+import ControlBar from "../components/control-bar";
 
 const DashBoard = () => {
 
@@ -34,12 +35,11 @@ const DashBoard = () => {
                 currentModel={currentModel}
                 setCurrentModel={setCurrentModel}
             />
-                <SidebarTrigger />
-                <div className="bg-black text-white h-screen w-screen p-5">
-                    Dashboard
-                    <AIText 
-                        currentModel={currentModel}
-                    />
+                <div className="flex flex-col w-full bg-gray-200">
+                    <ControlBar />
+                        <AIText 
+                            currentModel={currentModel}
+                        />
                 </div>
         </SidebarProvider>
      );

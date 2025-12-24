@@ -34,7 +34,7 @@ const AIText = ({ currentModel } : AIItextInteface) => {
     };
 
     return (
-        <div className="flex flex-col gap-2 p-4 border-2">
+        <div className="flex flex-col gap-2 p-4 border-2 w-full">
             <h4>Current Model: {currentModel}</h4>
             <Input
                 value={prompt}
