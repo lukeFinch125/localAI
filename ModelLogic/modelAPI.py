@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
+import psutil
+import pyamdgpuinfo
 
 # import your existing logic
 from ModelLogic import (
@@ -30,6 +32,22 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+#pc stats
+@app.get("/stats")
+def stats():
+
+    pyamdgpuinfo.detect_gpus()
+    first_gpu = pyamdgpuinfo.get_gpu(0)
+    vram_usage = first_gpu.query_vram_usage()
+
+    percent_vram_usage = vram_usage / 16000000000
+
+    return {
+        "cpu": psutil.cpu_percent(),
+        "memory": psutil.virtual_memory().percent,
+        "gpu": round(percent_vram_usage),
+    }
 
 @app.get("/")
 def read_root():

@@ -5,7 +5,8 @@ import AIText from "../components/ai-text";
 import AISidebar from "../components/ai-sidebar";
 import { useEffect, useState } from "react";
 import { getCurrentModel } from "@/api/modelClient";
-import ControlBar from "../components/control-bar";
+import ControlBar from "../components/gauges/Guage-bar";
+import TopBar from "../components/top-bar";
 
 const DashBoard = () => {
 
@@ -35,8 +36,8 @@ const DashBoard = () => {
                 currentModel={currentModel}
                 setCurrentModel={setCurrentModel}
             />
-                <div className="flex flex-col w-full bg-gray-200">
-                    <ControlBar />
+                <div className="flex flex-col w-full bg-background">
+                    <TopBar />
                         <AIText 
                             currentModel={currentModel}
                         />

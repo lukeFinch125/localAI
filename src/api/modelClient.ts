@@ -70,3 +70,20 @@ export async function getCurrentModel(): Promise<string> {
     return data.activeModel;
 }
 
+export type statsReturn = {
+    cpu: number,
+    memory: number,
+    gpu: number
+}
+
+export async function getPcStats(): Promise<statsReturn> {
+    const res = await fetch(`${API_BASE}/stats`);
+
+    if(!res.ok) {
+        throw new Error(`Failed to fetch pc stats: ${res.status}`);
+    }
+
+    const data = (await res.json()) as statsReturn;
+
+    return data;
+}

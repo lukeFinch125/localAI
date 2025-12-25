@@ -18,7 +18,9 @@ interface AISidebarIntereface {
 const AISidebar = ({ currentModel, setCurrentModel}: AISidebarIntereface) => {
     return ( 
         <Sidebar>
-            <SidebarContent>
+            <SidebarContent
+             className="bg-background"
+            >
               <SidebarGroupLabel>AI Models</SidebarGroupLabel>
               <SidebarGroup />
                 <ModelList 

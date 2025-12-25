@@ -5,3 +5,5 @@ tqdm==4.67.1
 ollama==0.6.1
 fastapi==0.124.4
 uvicorn[standard]==0.38.0
+psutil==7.2.0
+pyamdgpuinfo==2.1.7
