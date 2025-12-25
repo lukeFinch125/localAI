@@ -44,12 +44,10 @@ const GaugeBar = () => {
 
 
     return ( 
-        <div className="border-2 bg-background px-2 py-4">
-                <div className='w-full flex'>
+        <div className="px-2 py-4 w-full flex">
                     <GPUUsageComponent gpuUsage={gpuUsage}/>
                     <CPUUsageGauge cpuUsage={cpuUsage}/>
                     <MemoryUsageGauge memoryUsage={memoryUsage}/>
-                </div>
         </div>
      );
 }

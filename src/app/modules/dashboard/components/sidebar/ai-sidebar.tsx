@@ -9,6 +9,7 @@ import {
   SidebarHeader,
 } from "@/components/ui/sidebar"
 import ModelList from "./ai-models-list";
+import ConversationsList from "./conversation-list";
 
 interface AISidebarIntereface {
   currentModel: string;
@@ -16,17 +17,29 @@ interface AISidebarIntereface {
 }
 
 const AISidebar = ({ currentModel, setCurrentModel}: AISidebarIntereface) => {
-    return ( 
+    return (
         <Sidebar>
             <SidebarContent
-             className="bg-background"
+             className="bg-background gap-0 py-4"
             >
-              <SidebarGroupLabel>AI Models</SidebarGroupLabel>
+              <SidebarGroupLabel
+                className="text-foreground text-2xl px-5 flex flex-col"
+              ><p>Downloaded Models</p>
+              <span className="border border-foreground w-full"/>
+              </SidebarGroupLabel>
               <SidebarGroup />
                 <ModelList 
                   currentModel={currentModel}
                   setCurrentModel={setCurrentModel}
                 />
+              <SidebarGroup />
+              <SidebarGroupLabel
+                className="text-foreground text-2xl px-5 flex flex-col"
+              ><p>Conversations</p>
+              <span className="border border-foreground w-full"/>
+              </SidebarGroupLabel>
+              <SidebarGroup />
+                <ConversationsList />
               <SidebarGroup />
             </SidebarContent>
         </Sidebar>

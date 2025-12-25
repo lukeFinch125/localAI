@@ -2,7 +2,7 @@
 
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import AIText from "../components/ai-text";
-import AISidebar from "../components/ai-sidebar";
+import AISidebar from "../components/sidebar/ai-sidebar";
 import { useEffect, useState } from "react";
 import { getCurrentModel } from "@/api/modelClient";
 import ControlBar from "../components/gauges/Guage-bar";
@@ -36,7 +36,8 @@ const DashBoard = () => {
                 currentModel={currentModel}
                 setCurrentModel={setCurrentModel}
             />
-                <div className="flex flex-col w-full bg-background">
+                <SidebarTrigger />
+                <div className="flex flex-col w-full bg-secondary-foreground">
                     <TopBar />
                         <AIText 
                             currentModel={currentModel}

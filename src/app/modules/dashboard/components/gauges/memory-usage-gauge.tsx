@@ -6,7 +6,7 @@ interface memoryUsageGaugeInterface {
 
 const MemoryUsageGauge = ({ memoryUsage }: memoryUsageGaugeInterface) => {
     return ( 
-        <div className='border-2 border-white w-full flex flex-col justify-center items-center'>
+        <div className='w-full flex flex-col justify-center items-center'>
             <GaugeComponent 
                 type='semicircle'
                 marginInPercent= {{ top: .05, bottom: .05, left: .05, right: .05 }}
@@ -19,7 +19,7 @@ const MemoryUsageGauge = ({ memoryUsage }: memoryUsageGaugeInterface) => {
                         hideMinMax: true,
                     }
                 }}
-                className='w-[140px] h-[75px] border-2 border-green'
+                className='w-[100px] h-[50px]'
             />
             <p>
                 Memory
