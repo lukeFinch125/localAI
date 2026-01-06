@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Share_Tech, Share_Tech_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Share_Tech, Share_Tech_Mono, Courier_Prime } from "next/font/google";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -24,6 +24,12 @@ const shareTechMono = Share_Tech_Mono({
   weight: "400",
 });
 
+const courierPrime = Courier_Prime({
+  variable: "--font-courier-prime",
+  subsets: ["latin"],
+  weight: "400",
+})
+
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -38,7 +44,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${shareTech.variable} ${shareTechMono.variable} antialiased`}
+        className={`${courierPrime.variable} font-courier antialiased`}
       >
         {children}
       </body>

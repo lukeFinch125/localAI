@@ -66,16 +66,20 @@ const AIText = ({ currentModel } : AIItextInteface) => {
     }
 
     return (
-        <div className="flex flex-col gap-2 p-4 border-2 border-white h-full w-full">
-            <h4>Current Model: {currentModel}</h4>
-            <Input
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                placeholder="Prompt"
-            />
-            <InputFile setInputFileTxt={setInputFileTxt} setIsInputFile={setIsInputFile}/>
-            <Button onClick={handleSubmit}>Submit</Button>
-            <p>{response}</p>
+        <div className="grid h-full grid-rows-[75%_25%] p-8 gap-4">
+            <div className="border border-white ">
+                <p>{response}</p>
+            </div>
+            <div className="border border-white flex flex-col gap-2 p-4 h-full w-full">
+                <Input
+                    value={prompt}
+                    onChange={(e) => setPrompt(e.target.value)}
+                    placeholder="Prompt"
+                    className="border-2 border-foreground"
+                />
+                <InputFile setInputFileTxt={setInputFileTxt} setIsInputFile={setIsInputFile}/>
+                <Button onClick={handleSubmit}>Submit</Button>
+            </div>
         </div>
     );
 };
