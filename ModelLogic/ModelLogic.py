@@ -135,6 +135,56 @@ def start_new_conversation(title):
     current_conversation_id = conversation_id
     return conversation_id
 
+def create_summary(prompt):
+    summarize_conversation_msg = (
+        'You are a AI agent whos job it is to summarize user prompts into 3 or 4 words maximum.' +
+        'All you do is return a summary for the prompt you are given. Do not explain why you ' +
+        'Summarized it a certain way or say anything else besides a short summary'
+    )
+    summarize_conversation_convo = [
+        {'role': 'system', 'content': summarize_conversation_msg},
+        {'role': 'user', 'content': 'Write an email to my car insurance company.'},
+        {'role': 'assistant', 'content': 'email to insurance'},
+        {'role': 'user', 'content': 'how can I convert the speak function in my llama3 python voice assistant to use pyttsx3 instead of OpanAI TTS?'},
+        {'role': 'assistant', 'content': 'voice assistant help'},
+        {'role': 'user', 'content': prompt}
+    ]
+
+    response = ollama.chat(model='llama3.1', messages=summarize_conversation_convo)
+
+    return response['message']['content']
+
+
+
+
+
+def summarize_conversation_list():
+    conn = connect_db()
+    with conn.cursor() as cursor:
+        cursor.execute(
+            'WITH first_messages AS ( '
+            '   SELECT DISTINCT ON (conversation_id) '
+            '       conversation_id, '
+            '       prompt, '
+            '       timestamp '
+            '   FROM messages '
+            '   ORDER BY conversation_id DESC, timestamp ASC '
+            ') '
+            'SELECT conversation_id, prompt '
+            'FROM first_messages '
+            'ORDER BY conversation_id DESC '
+            'LIMIT 20;'
+        )
+        prompts = cursor.fetchall()
+        conn.close()
+    
+    summary_list = []
+    for conversation_id, prompt_text in prompts:
+        summary = create_summary(prompt_text)
+        summary_list.append({'summary': summary, 'conversation_id': conversation_id})
+    return summary_list
+
+
 def stream_response(prompt):
     response = ''
     stream = ollama.chat(model=chatModel, messages=convo, stream=True)

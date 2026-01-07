@@ -15,7 +15,8 @@ from ModelLogic import (
     searchMode,
     recallMode,
     current_conversation_id,
-    start_new_conversation
+    start_new_conversation,
+    summarize_conversation_list
 )
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -132,5 +133,6 @@ def new_conversation():
     conversation_id = start_new_conversation("test")
     return conversation_id
 
-
-    
+@app.get("/getConversationBacklog")
+def get_conversation_list():
+    return summarize_conversation_list()

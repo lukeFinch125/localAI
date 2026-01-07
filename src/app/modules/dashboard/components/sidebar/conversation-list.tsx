@@ -1,29 +1,39 @@
+'use client';
+
+import { conversationSummary, getConversationSummaries } from "@/api/modelClient";
 import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
 
 const ConversationsList = () => {
+
+    const [conversationSummaryList, setConversationSummaryList] = useState<conversationSummary[] | null>();
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(false);
+
+    useEffect(() => {
+            async function loadSummarizes() {
+                try {
+                    const data = await getConversationSummaries();
+                    setConversationSummaryList(data);
+                } catch (err) {
+                    setError(true);
+                } finally {
+                    setLoading(false);
+                }
+            }
+            loadSummarizes();
+        }, []);
+
     return ( 
         <ul className="flex flex-col gap-2 px-4">
-            <Button className="border-2 justify-start border-chart-3 bg-background text-xl text-white">
-                Python coding help
-            </Button>
-            <Button className="border-2 justify-start border-chart-3 bg-background text-xl text-white">
-                capital of france
-            </Button>
-            <Button className="border-2 justify-start border-chart-3 bg-background text-xl text-white">
-                linear algebra matrix...
-            </Button>
-            <Button className="border-2 justify-start border-chart-3 bg-background text-xl text-white">
-                tailwind css help
-            </Button>
-            <Button className="border-2 justify-start border-chart-3 bg-background text-xl text-white">
-                fornite best skins
-            </Button>
-            <Button className="border-2 justify-start border-chart-3 bg-background text-xl text-white">
-                benefits of creatine...
-            </Button>
-            <Button className="border-2 justify-start border-chart-3 bg-background text-xl text-white">
-                view more...
-            </Button>
+            {conversationSummaryList?.map(conversation => (
+                <Button 
+                    key={conversation.conversation_id}
+                    onClick={() => {console.log("load this conversation" + conversation.conversation_id)}}
+                >
+                    {conversation.summary}
+                </Button>
+            ))}
         </ul>
      );
 }

@@ -87,3 +87,20 @@ export async function getPcStats(): Promise<statsReturn> {
 
     return data;
 }
+
+export type conversationSummary = {
+    conversation_id: number,
+    summary: string
+}
+
+export async function getConversationSummaries(): Promise<conversationSummary[]> {
+    const res = await fetch(`${API_BASE}/getConversationBacklog`);
+
+    if(!res.ok) {
+        throw new Error(`Failed to conversation summarizes: ${res.status}`);
+    }
+
+    const data = (await res.json()) as conversationSummary[];
+
+    return data;
+}
