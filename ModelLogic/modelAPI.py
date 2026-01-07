@@ -13,7 +13,9 @@ from ModelLogic import (
     toggle_recall_mode,
     toggle_search_mode,
     searchMode,
-    recallMode
+    recallMode,
+    current_conversation_id,
+    start_new_conversation
 )
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -123,5 +125,12 @@ def get_recall_mode():
     print("Recall Mode:")
     print(recallMode)
     return recallMode
+
+#start new conversation
+@app.post("/startNewConversation")
+def new_conversation():
+    conversation_id = start_new_conversation("test")
+    return conversation_id
+
 
     

@@ -11,6 +11,7 @@ chatModel = "llama3.1"
 encodingModel = "nomic-embed-text:latest"
 recallMode = False
 searchMode = False
+current_conversation_id = None
 
 def toggle_recall_mode():
     global recallMode
@@ -72,29 +73,50 @@ def connect_db():
     conn = psycopg.connect(**DB_PARAMS)
     return conn
 
-def fetch_conversations():
+def fetch_messages():
     conn = connect_db()
     with conn.cursor(row_factory=dict_row) as cursor:
-        cursor.execute('SELECT * FROM conversations')
-        conversations = cursor.fetchall()
+        cursor.execute('SELECT * FROM messages')
+        messages = cursor.fetchall()
     conn.close()
-    return conversations
+    return messages
 
-def store_conversations(prompt, response):
+def store_message(prompt, response):
     conn = connect_db()
     with conn.cursor() as cursor:
         cursor.execute(
-            'INSERT INTO conversations (timestamp, prompt, response) VALUES (CURRENT_TIMESTAMP, %s, %s)', (prompt, response)
+            'INSERT INTO messages (timestamp, prompt, response, conversation_id) VALUES (CURRENT_TIMESTAMP, %s, %s, %s)', (prompt, response, current_conversation_id)
         )
         conn.commit()
     conn.close()
 
 def remove_last_conversation():#this is broken
+    if True:
+        print("Need to fix remove last conversation")
+        return
     conn = connect_db()
     with conn.cursor() as cursor:
         cursor.execute('DELETE FROM conversations WHERE id = (SELECT MAX(id) FROM conversations)')
         cursor.commit()
     conn.close()
+
+def start_new_conversation(title):
+    conn = connect_db()
+    with conn.cursor() as cursor:
+        cursor.execute(
+            'INSERT INTO conversations (title) VALUES (%s) RETURNING conversation_id',
+            (title,)
+        )
+        conversation_id = cursor.fetchone()[0]
+        conn.commit()
+    conn.close()
+
+    global convo
+    convo = [{'role': 'system', 'content': system_prompt}]
+
+    global current_conversation_id
+    current_conversation_id = conversation_id
+    return conversation_id
 
 def stream_response(prompt):
     response = ''
@@ -107,19 +129,19 @@ def stream_response(prompt):
         print(content, end='', flush=True)
 
     print('\n')
-    store_conversations(prompt=prompt, response=response)
+    store_message(prompt=prompt, response=response)
     convo.append({'role': 'assistant', 'content': response})
 
 def standard_response(prompt):
     response = ollama.chat(model=chatModel, messages=convo)
     responseString = response["message"]["content"]
     print(Fore.LIGHTGREEN_EX + '\nASSISTANT: \n ' + responseString)
-    store_conversations(prompt=prompt, response=responseString)
+    store_message(prompt=prompt, response=responseString)
     convo.append({'role': 'assistant', 'content': responseString})
     return responseString
 
-def create_vector_db(conversations):
-    vector_db_name = 'conversations'
+def create_vector_db(messages):
+    vector_db_name = 'messages'
     existing = [c.name for c in client.list_collections()]
 
     if vector_db_name in existing:
@@ -128,7 +150,7 @@ def create_vector_db(conversations):
 
     vector_db = client.create_collection(name=vector_db_name)
 
-    for c in conversations:
+    for c in messages:
         serialized_convo = f'prompt: {c['prompt']} response: {c['response']}'
         response = ollama.embeddings(model=encodingModel, prompt=serialized_convo)
         embedding = response['embedding']
@@ -137,6 +159,7 @@ def create_vector_db(conversations):
             ids=[str(c['id'])],
             embeddings=[embedding],
             documents=[serialized_convo],
+            metadatas=[{"conversation_id": current_conversation_id}]
         )
 
 def retrieve_embeddings(queries, results_per_query=2):
@@ -214,14 +237,18 @@ def recall(prompt):
 def search(prompt):
     print("searching")
 
-conversations = fetch_conversations()
-create_vector_db(conversations=conversations)
 
 def handle_prompt(prompt: str) -> str:
     global convo
     global recallMode
     global searchMode
+    global current_conversation_id
+    if current_conversation_id == None:
+        start_new_conversation("test")
+        print("New conversation started")
 
+    messages = fetch_messages()
+    create_vector_db(messages=messages)
     clean_prompt = prompt.strip()
 
     if recallMode == True:
@@ -241,7 +268,7 @@ def handle_prompt(prompt: str) -> str:
         
     elif clean_prompt.lower().startswith("/memorize"):
         clean_prompt = clean_prompt[10:].strip()
-        store_conversations(prompt=clean_prompt, response='Memory stored. ')
+        store_message(prompt=clean_prompt, response='Memory stored. ')
         return "Memory stored. "
 
     else:
