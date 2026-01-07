@@ -5,8 +5,25 @@ import ast
 from tqdm import tqdm
 from psycopg.rows import dict_row
 from colorama import Fore
+from chromadb.config import Settings
 
-client = chromadb.Client()
+client = chromadb.Client(
+    Settings(
+        persist_directory="./chroma",
+        anonymized_telemetry=False
+    )
+)
+
+vector_db_name = "messages"
+existing_collections = [c.name for c in client.list_collections()]
+
+if vector_db_name in existing_collections:
+    vector_db = client.get_collection(name=vector_db_name)
+    print("loaded existing vector db")
+else:
+    vector_db = client.create_collection(name=vector_db_name)
+    print("created new vector db")
+
 chatModel = "llama3.1"
 encodingModel = "nomic-embed-text:latest"
 recallMode = False
@@ -73,7 +90,7 @@ def connect_db():
     conn = psycopg.connect(**DB_PARAMS)
     return conn
 
-def fetch_messages():
+def fetch_all_messages():
     conn = connect_db()
     with conn.cursor(row_factory=dict_row) as cursor:
         cursor.execute('SELECT * FROM messages')
@@ -82,13 +99,17 @@ def fetch_messages():
     return messages
 
 def store_message(prompt, response):
+    message = {'prompt': prompt, 'response': response, 'id': 'some_unique_id_here'}
+    add_message_to_vector_db(message)  # pass a dict
     conn = connect_db()
     with conn.cursor() as cursor:
         cursor.execute(
-            'INSERT INTO messages (timestamp, prompt, response, conversation_id) VALUES (CURRENT_TIMESTAMP, %s, %s, %s)', (prompt, response, current_conversation_id)
+            'INSERT INTO messages (timestamp, prompt, response, conversation_id) VALUES (CURRENT_TIMESTAMP, %s, %s, %s)',
+            (prompt, response, current_conversation_id)
         )
         conn.commit()
     conn.close()
+
 
 def remove_last_conversation():#this is broken
     if True:
@@ -140,27 +161,15 @@ def standard_response(prompt):
     convo.append({'role': 'assistant', 'content': responseString})
     return responseString
 
-def create_vector_db(messages):
-    vector_db_name = 'messages'
-    existing = [c.name for c in client.list_collections()]
-
-    if vector_db_name in existing:
-        client.delete_collection(name=vector_db_name)
-
-
-    vector_db = client.create_collection(name=vector_db_name)
-
-    for c in messages:
-        serialized_convo = f'prompt: {c['prompt']} response: {c['response']}'
-        response = ollama.embeddings(model=encodingModel, prompt=serialized_convo)
-        embedding = response['embedding']
-
-        vector_db.add(
-            ids=[str(c['id'])],
-            embeddings=[embedding],
-            documents=[serialized_convo],
-            metadatas=[{"conversation_id": current_conversation_id}]
-        )
+def add_message_to_vector_db(message):
+    serialized_convo = f"prompt: {message['prompt']} response: {message['response']}"
+    embedding = ollama.embeddings(model=encodingModel, prompt=serialized_convo)['embedding']
+    vector_db.add(
+        ids=[str(message['id'])],
+        embeddings=[embedding],
+        documents=[serialized_convo],
+        metadatas=[{"conversation_id": str(message.get('conversation_id', ''))}]
+    )
 
 def retrieve_embeddings(queries, results_per_query=2):
     embeddings = set()
@@ -169,7 +178,7 @@ def retrieve_embeddings(queries, results_per_query=2):
         response = ollama.embeddings(model=encodingModel, prompt=query)
         query_embedding = response['embedding']
 
-        vector_db = client.get_collection(name='conversations')
+        vector_db = client.get_collection(name='messages')
         results = vector_db.query(query_embeddings=[query_embedding], n_results=results_per_query)
         best_embeddings = results['documents'][0]
 
@@ -237,6 +246,32 @@ def recall(prompt):
 def search(prompt):
     print("searching")
 
+def initialize_vector_db():
+    global vector_db
+
+    existing_collections = [c.name for c in client.list_collections()]
+    if vector_db_name in existing_collections:
+        vector_db = client.get_collection(name=vector_db_name)
+        print("Loaded existing vector DB")
+    else:
+        vector_db = client.create_collection(name=vector_db_name)
+        print("Created new vector DB")
+
+    # Load messages from DB into vector DB if empty
+    if vector_db.count() == 0:  # Only add if collection is empty
+        messages = fetch_all_messages()
+        for m in messages:
+            if m['conversation_id'] is not None:  # ensure it's valid
+                msg = {
+                    'prompt': m['prompt'],
+                    'response': m['response'],
+                    'id': m['id'],
+                    'conversation_id': m['conversation_id']  # pass the real conversation_id
+                }
+                add_message_to_vector_db(msg)
+        print(f"Loaded {len(messages)} messages into vector DB")
+
+initialize_vector_db()
 
 def handle_prompt(prompt: str) -> str:
     global convo
@@ -247,8 +282,6 @@ def handle_prompt(prompt: str) -> str:
         start_new_conversation("test")
         print("New conversation started")
 
-    messages = fetch_messages()
-    create_vector_db(messages=messages)
     clean_prompt = prompt.strip()
 
     if recallMode == True:
