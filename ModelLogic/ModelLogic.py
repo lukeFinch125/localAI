@@ -7,22 +7,18 @@ from psycopg.rows import dict_row
 from colorama import Fore
 from chromadb.config import Settings
 
-client = chromadb.Client(
-    Settings(
-        persist_directory="./chroma",
-        anonymized_telemetry=False
-    )
-)
+client = chromadb.PersistentClient(path="./chroma")
 
 vector_db_name = "messages"
 existing_collections = [c.name for c in client.list_collections()]
-
 if vector_db_name in existing_collections:
     vector_db = client.get_collection(name=vector_db_name)
     print("loaded existing vector db")
 else:
     vector_db = client.create_collection(name=vector_db_name)
     print("created new vector db")
+
+print(f"Vector DB currently contains {vector_db.count()} items.")
 
 chatModel = "llama3.1"
 encodingModel = "nomic-embed-text:latest"
@@ -162,14 +158,46 @@ def standard_response(prompt):
     return responseString
 
 def add_message_to_vector_db(message):
+    """
+    Adds a message to the Chroma collection.
+    Only adds new messages; avoids duplicating existing ones.
+    """
+    # Get existing data for this ID
+    existing = vector_db.get(ids=[str(message['id'])])
+    existing_ids_list = existing.get('ids', [])
+
+    # Check if any IDs were returned
+    if existing_ids_list and existing_ids_list[0]:
+        print(f"Message {message['id']} already in vector DB. Skipping.")
+        return
+
+    # Create embedding
     serialized_convo = f"prompt: {message['prompt']} response: {message['response']}"
     embedding = ollama.embeddings(model=encodingModel, prompt=serialized_convo)['embedding']
+
     vector_db.add(
         ids=[str(message['id'])],
         embeddings=[embedding],
         documents=[serialized_convo],
         metadatas=[{"conversation_id": str(message.get('conversation_id', ''))}]
     )
+    print(f"Added message {message['id']} to vector DB.")
+
+
+
+def load_messages_from_db(messages):
+    """
+    Load messages from PostgreSQL into Chroma if they aren't already in the vector DB.
+    """
+    for m in messages:
+        msg = {
+            'prompt': m['prompt'],
+            'response': m['response'],
+            'id': m['id'],
+            'conversation_id': m.get('conversation_id')
+        }
+        add_message_to_vector_db(msg)
+    print(f"Finished loading messages into vector DB.")
 
 def retrieve_embeddings(queries, results_per_query=2):
     embeddings = set()
@@ -247,9 +275,15 @@ def search(prompt):
     print("searching")
 
 def initialize_vector_db():
+    """
+    Initializes the Chroma vector DB.
+    Loads an existing collection if it exists, or creates a new one.
+    Only adds messages that aren't already in the collection.
+    """
     global vector_db
 
     existing_collections = [c.name for c in client.list_collections()]
+
     if vector_db_name in existing_collections:
         vector_db = client.get_collection(name=vector_db_name)
         print("Loaded existing vector DB")
@@ -257,19 +291,23 @@ def initialize_vector_db():
         vector_db = client.create_collection(name=vector_db_name)
         print("Created new vector DB")
 
-    # Load messages from DB into vector DB if empty
-    if vector_db.count() == 0:  # Only add if collection is empty
+    # Only load messages from PostgreSQL if the collection is empty
+    if vector_db.count() == 0:
+        print("Vector DB is empty, loading messages from PostgreSQL...")
         messages = fetch_all_messages()
         for m in messages:
-            if m['conversation_id'] is not None:  # ensure it's valid
+            # Ensure conversation_id exists
+            if m['conversation_id'] is not None:
                 msg = {
                     'prompt': m['prompt'],
                     'response': m['response'],
                     'id': m['id'],
-                    'conversation_id': m['conversation_id']  # pass the real conversation_id
+                    'conversation_id': m['conversation_id']
                 }
                 add_message_to_vector_db(msg)
         print(f"Loaded {len(messages)} messages into vector DB")
+    else:
+        print(f"Vector DB already has {vector_db.count()} items. No messages loaded.")
 
 initialize_vector_db()
 
