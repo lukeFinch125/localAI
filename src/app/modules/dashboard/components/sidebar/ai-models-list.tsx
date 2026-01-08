@@ -46,9 +46,11 @@ const ModelList = ({ currentModel, setCurrentModel}: AISidebarIntereface) => {
                 <Button 
                     key={model}
                     onClick={() => updateModel(model)}
-                    className={cn("border-2 border-chart-3 bg-background text-xl text-white", model === currentModel && " text-foreground border-foreground")}
+                    className={cn("border-2 border-chart-3 bg-background text-xl text-white hover:text-background hover:bg-foreground", model === currentModel && " text-background bg-foreground")}
                 >
-                    {model}
+                    <span className="block overflow-hidden whitespace-nowrap text-ellipsis">
+                        {model}
+                    </span>
                 </Button>
             ))}
             <Button className="border-2 border-chart-3 bg-background">

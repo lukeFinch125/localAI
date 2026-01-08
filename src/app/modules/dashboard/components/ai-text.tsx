@@ -10,9 +10,11 @@ import { ChevronUp, PlusIcon } from "lucide-react";
 
 interface AIItextInteface {
     currentModel: string;
+    currentConversationID: number;
+    setCurrentConversationID: (conversationID: number) => void;
 }
 
-const AIText = ({ currentModel } : AIItextInteface) => {
+const AIText = ({ currentModel, currentConversationID, setCurrentConversationID } : AIItextInteface) => {
     const [prompt, setPrompt] = useState("");
     const [response, setResponse] = useState("");
     const [isInputFile, setIsInputFile] = useState(false);
@@ -30,6 +32,7 @@ const AIText = ({ currentModel } : AIItextInteface) => {
             const data = await getResponse(prompt);
             console.log(data);
             setResponse(data.response);
+            setCurrentConversationID(data.conversationID)
         } catch (err) {
             console.log(err);
             setResponse("Error fetching response");

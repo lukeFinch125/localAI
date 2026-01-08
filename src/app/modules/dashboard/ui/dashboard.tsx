@@ -4,7 +4,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import AIText from "../components/ai-text";
 import AISidebar from "../components/sidebar/ai-sidebar";
 import { useEffect, useState } from "react";
-import { getCurrentModel } from "@/api/modelClient";
+import { conversationID, getConversationID, getCurrentModel } from "@/api/modelClient";
 import ControlBar from "../components/gauges/Guage-bar";
 import TopBar from "../components/top-bar";
 
@@ -12,13 +12,15 @@ const DashBoard = () => {
 
     const [currentModel, setCurrentModel] = useState<string>("");
     const [loading, setLoading] = useState(true);
+    const [currentConversationID, setCurrentConversationID] = useState<conversationID>(0)
 
     useEffect(() => {
         const fetchCurrentModel = async () => {
             try {
                 const model = await getCurrentModel();
-                console.log("FetchCurrentModel: " + model);
+                const conversationID = await getConversationID();
                 setCurrentModel(model);
+                setCurrentConversationID(conversationID);
             } catch (error) {
                 console.log("Failed to catch current model: ", error);
             } finally {
@@ -41,6 +43,8 @@ const DashBoard = () => {
                     <TopBar />
                         <AIText 
                             currentModel={currentModel}
+                            currentConversationID={currentConversationID}
+                            setCurrentConversationID={setCurrentConversationID}
                         />
                 </div>
         </SidebarProvider>

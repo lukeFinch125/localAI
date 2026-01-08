@@ -184,6 +184,24 @@ def summarize_conversation_list():
         summary_list.append({'summary': summary, 'conversation_id': conversation_id})
     return summary_list
 
+def get_conversation(conversation_id: int):
+    conn = connect_db()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT prompt, response
+                FROM messages
+                WHERE conversation_id = %s
+                ORDER BY timestamp DESC;
+                """,
+                (conversation_id,)
+            )
+            messages = cursor.fetchall()
+    finally:
+        conn.close()
+
+    return messages
 
 def stream_response(prompt):
     response = ''
@@ -366,10 +384,8 @@ def handle_prompt(prompt: str) -> str:
     global recallMode
     global searchMode
     global current_conversation_id
-    if current_conversation_id == None:
-        start_new_conversation("test")
-        print("New conversation started")
-
+    if current_conversation_id is None:
+        current_conversation_id = start_new_conversation("test")
     clean_prompt = prompt.strip()
 
     if recallMode == True:
@@ -395,4 +411,4 @@ def handle_prompt(prompt: str) -> str:
     else:
         convo.append({'role': 'user', 'content': clean_prompt})
         response = standard_response(prompt=clean_prompt)
-        return response
+        return response, current_conversation_id

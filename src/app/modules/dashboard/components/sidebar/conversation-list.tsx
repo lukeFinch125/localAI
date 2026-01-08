@@ -30,8 +30,11 @@ const ConversationsList = () => {
                 <Button 
                     key={conversation.conversation_id}
                     onClick={() => {console.log("load this conversation" + conversation.conversation_id)}}
+                    className="w-full h-6.25 bg-background text-white px-1 justify-start hover:bg-foreground hover:text-background"
                 >
-                    {conversation.summary}
+                    <span className="block overflow-hidden whitespace-nowrap text-ellipsis">
+                        {conversation.summary}
+                    </span>
                 </Button>
             ))}
         </ul>

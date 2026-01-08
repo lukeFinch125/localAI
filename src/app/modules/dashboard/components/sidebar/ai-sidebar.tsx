@@ -24,7 +24,7 @@ const AISidebar = ({ currentModel, setCurrentModel}: AISidebarIntereface) => {
             >
               <SidebarGroupLabel
                 className="text-foreground text-2xl px-5 flex flex-col"
-              ><p>Downloaded Models</p>
+              ><p>Models</p>
               <span className="border border-foreground w-full"/>
               </SidebarGroupLabel>
               <SidebarGroup />

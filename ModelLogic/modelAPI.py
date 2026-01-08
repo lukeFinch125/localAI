@@ -14,9 +14,10 @@ from ModelLogic import (
     toggle_search_mode,
     searchMode,
     recallMode,
-    current_conversation_id,
     start_new_conversation,
-    summarize_conversation_list
+    current_conversation_id,
+    summarize_conversation_list,
+    get_conversation
 )
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -73,12 +74,13 @@ class PromptRequest(BaseModel):
 @app.post("/prompt")
 def run_prompt(request: PromptRequest):
     user_prompt = request.prompt
-    response = handle_prompt(user_prompt)
+    response, conversation_id = handle_prompt(user_prompt)
 
     return {
         "prompt": user_prompt,
         "response": response,
-        "model": chatModel
+        "model": chatModel,
+        "conversationID": conversation_id
     }
 
 #return local ollama model list
@@ -136,3 +138,19 @@ def new_conversation():
 @app.get("/getConversationBacklog")
 def get_conversation_list():
     return summarize_conversation_list()
+
+#get current conversation ID
+@app.get("/getCurrentConversationID")
+def get_current_conversationID():
+    global current_conversation_id
+    return current_conversation_id
+
+
+#get conversation by ID
+class GetConversationRequest(BaseModel):
+    conversationID: int
+
+@app.post("/getConversationByID")
+def get_conversation_by_id(request: GetConversationRequest):
+    response = get_conversation(request.conversationID)
+    return response

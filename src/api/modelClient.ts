@@ -14,6 +14,8 @@ export async function getModels(): Promise<getModelsResponse> {
 export interface promptResponse {
         prompt: string;
         response: string;
+        model: string;
+        conversationID: number
 }
 
 export async function getResponse(prompt: string): Promise<promptResponse> {
@@ -30,7 +32,6 @@ export async function getResponse(prompt: string): Promise<promptResponse> {
     if(!res.ok) {
         throw new Error(`Request failed`);
     }
-
     return res.json();
 }
 
@@ -101,6 +102,20 @@ export async function getConversationSummaries(): Promise<conversationSummary[]>
     }
 
     const data = (await res.json()) as conversationSummary[];
+
+    return data;
+}
+
+export type conversationID = number
+
+export async function getConversationID(): Promise<conversationID> {
+    const res = await fetch(`${API_BASE}/getCurrentConversationID`);
+
+    if(!res.ok) {
+        throw new Error(`Failed to get current conversation ID: ${res.status}`);
+    }
+
+    const data = (await res.json()) as conversationID;
 
     return data;
 }
