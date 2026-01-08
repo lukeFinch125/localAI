@@ -119,3 +119,32 @@ export async function getConversationID(): Promise<conversationID> {
 
     return data;
 }
+
+export type ConversationMessage = {
+    prompt: string;
+    response: string;
+}
+
+export type ConversationLog = {
+    messages: ConversationMessage[];
+}
+
+export async function getConversationLog(id: number): Promise<ConversationLog> {
+    const res = await fetch(`${API_BASE}/getConversationByID`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            conversationID: id
+        }),
+    });
+
+    if(!res.ok) {
+        throw new Error(`Failed to get current conversation log: ${res.status}`);
+    }
+
+    const data = (await res.json()) as ConversationLog;
+
+    return data;
+}

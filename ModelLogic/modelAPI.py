@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 import psutil
 import pyamdgpuinfo
+from typing import List
 
 # import your existing logic
 from ModelLogic import (
@@ -73,11 +74,10 @@ class PromptRequest(BaseModel):
 
 @app.post("/prompt")
 def run_prompt(request: PromptRequest):
-    user_prompt = request.prompt
-    response, conversation_id = handle_prompt(user_prompt)
+    response, conversation_id = handle_prompt(request.prompt)
 
     return {
-        "prompt": user_prompt,
+        "prompt": request.prompt,
         "response": response,
         "model": chatModel,
         "conversationID": conversation_id
@@ -150,7 +150,10 @@ def get_current_conversationID():
 class GetConversationRequest(BaseModel):
     conversationID: int
 
+class GetConversationResponse(BaseModel):
+    messages: List[List[str]]
+
 @app.post("/getConversationByID")
 def get_conversation_by_id(request: GetConversationRequest):
     response = get_conversation(request.conversationID)
-    return response
+    return {"messages": response}

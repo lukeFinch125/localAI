@@ -391,12 +391,12 @@ def handle_prompt(prompt: str) -> str:
     if recallMode == True:
         recall(prompt=clean_prompt)
         response = standard_response(prompt=clean_prompt)
-        return response
+        return response, current_conversation_id
 
     elif searchMode == True:
         search(clean_prompt)
         response = standard_response(prompt=clean_prompt)
-        return response
+        return response, current_conversation_id
 
     elif clean_prompt.lower().startswith("/forget"):
         remove_last_conversation()

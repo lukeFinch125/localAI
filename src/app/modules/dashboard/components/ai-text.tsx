@@ -5,8 +5,9 @@ import { Input } from "@/components/ui/input";
 import { useRef, useState } from "react";
 import InputFile from "./input-file";
 import { Console } from "console";
-import { getResponse } from "@/api/modelClient";
+import { getConversationLog, getResponse } from "@/api/modelClient";
 import { ChevronUp, PlusIcon } from "lucide-react";
+import { ConversationLog } from "@/api/modelClient";
 
 interface AIItextInteface {
     currentModel: string;
@@ -21,6 +22,7 @@ const AIText = ({ currentModel, currentConversationID, setCurrentConversationID 
     const [inputFileTxt, setInputFileTxt] = useState("");
     const [loading, setLoading] = useState(false);
     const [inConversation, setInConversation] = useState(false);
+    const [conversationLog, setConversationLog] = useState<ConversationLog>();
     
     const handleSubmit = async () => {
         try {
@@ -28,15 +30,16 @@ const AIText = ({ currentModel, currentConversationID, setCurrentConversationID 
                 setInConversation(true);
             }
             setLoading(true)
-
             const data = await getResponse(prompt);
-            console.log(data);
             setResponse(data.response);
             setCurrentConversationID(data.conversationID)
         } catch (err) {
             console.log(err);
             setResponse("Error fetching response");
         } finally {
+            const messages = await getConversationLog(currentConversationID);
+            setConversationLog(messages);
+            console.log(conversationLog)
             setLoading(false);
         }
     };
