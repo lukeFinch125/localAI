@@ -44,7 +44,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${courierPrime.variable} font-courier antialiased`}
+        className={`${geistSans.variable} font-courier antialiased`}
       >
         {children}
       </body>

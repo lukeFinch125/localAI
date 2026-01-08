@@ -193,7 +193,7 @@ def get_conversation(conversation_id: int):
                 SELECT prompt, response
                 FROM messages
                 WHERE conversation_id = %s
-                ORDER BY timestamp DESC;
+                ORDER BY timestamp;
                 """,
                 (conversation_id,)
             )

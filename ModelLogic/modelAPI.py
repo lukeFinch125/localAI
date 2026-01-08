@@ -150,10 +150,21 @@ def get_current_conversationID():
 class GetConversationRequest(BaseModel):
     conversationID: int
 
-class GetConversationResponse(BaseModel):
-    messages: List[List[str]]
+class ConversationMessage(BaseModel):
+    prompt: str
+    response: str
 
-@app.post("/getConversationByID")
+class GetConversationResponse(BaseModel):
+    messages: list[ConversationMessage]
+
+@app.post("/getConversationByID", response_model=GetConversationResponse)
 def get_conversation_by_id(request: GetConversationRequest):
-    response = get_conversation(request.conversationID)
-    return {"messages": response}
+    raw = get_conversation(request.conversationID)
+    # raw is List[List[str]]
+
+    messages = [
+        ConversationMessage(prompt=msg[0], response=msg[1])
+        for msg in raw
+    ]
+
+    return {"messages": messages}

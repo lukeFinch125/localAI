@@ -2,12 +2,14 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import InputFile from "./input-file";
 import { Console } from "console";
 import { getConversationLog, getResponse } from "@/api/modelClient";
 import { ChevronUp, PlusIcon } from "lucide-react";
 import { ConversationLog } from "@/api/modelClient";
+import { stringify } from "querystring";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface AIItextInteface {
     currentModel: string;
@@ -17,12 +19,14 @@ interface AIItextInteface {
 
 const AIText = ({ currentModel, currentConversationID, setCurrentConversationID } : AIItextInteface) => {
     const [prompt, setPrompt] = useState("");
-    const [response, setResponse] = useState("");
     const [isInputFile, setIsInputFile] = useState(false);
     const [inputFileTxt, setInputFileTxt] = useState("");
     const [loading, setLoading] = useState(false);
     const [inConversation, setInConversation] = useState(false);
-    const [conversationLog, setConversationLog] = useState<ConversationLog>();
+    const [error, setError] = useState(false);
+    const [conversationLog, setConversationLog] = useState<ConversationLog>({
+        messages: [],
+    });
     
     const handleSubmit = async () => {
         try {
@@ -31,22 +35,38 @@ const AIText = ({ currentModel, currentConversationID, setCurrentConversationID 
             }
             setLoading(true)
             const data = await getResponse(prompt);
-            setResponse(data.response);
             setCurrentConversationID(data.conversationID)
+
+            const updatedLog = await getConversationLog(data.conversationID);
+            setConversationLog(updatedLog);
+
         } catch (err) {
             console.log(err);
-            setResponse("Error fetching response");
         } finally {
-            const messages = await getConversationLog(currentConversationID);
-            setConversationLog(messages);
-            console.log(conversationLog)
             setLoading(false);
         }
     };
 
+    useEffect(() => {
+        if (currentConversationID == null) return;
+
+        async function loadConversationLog() {
+            try {
+                const data = await getConversationLog(currentConversationID);
+                setConversationLog(data);
+                console.log(data.messages);
+            } catch (err) {
+                setError(true);
+            } finally {
+                setLoading(false);
+            }
+        }
+        loadConversationLog();
+    }, [currentConversationID]);
+
     if(!inConversation) {
         return (
-            <div className="flex flex-col justify-center items-center h-[70%] w-full border-white border">
+            <div className="flex flex-col h-full justify-center items-center">
                 <div className="h-[35%] w-[80%] flex flex-col items-center gap-8">
                     <h1 className="text-2xl">What are you working on?</h1>
                     <div className="px-2 border border-white rounded-xl flex w-full max-w-[70%] h-12 items-center">
@@ -72,18 +92,32 @@ const AIText = ({ currentModel, currentConversationID, setCurrentConversationID 
     }
 
     return (
-        <div className="grid h-full grid-rows-[75%_25%] p-8 gap-4">
-            <div className="border border-white ">
-                <p>{response}</p>
-            </div>
-            <div className="border border-white flex flex-col gap-2 p-4 h-full w-full">
+        <div className="flex flex-col h-screen">
+            {/* Scrollable area: takes all remaining space */}
+            <ScrollArea className="flex-1 overflow-auto p-4">
+                <div className="flex flex-col gap-4">
+                {conversationLog?.messages.map((message) => (
+                    <div key={message.response} className="flex flex-col gap-2">
+                    <div className="flex justify-end">
+                        <div className="border border-foreground p-1 rounded-sm">
+                        {message.prompt}
+                        </div>
+                    </div>
+                    <div className="text-white">{message.response}</div>
+                    </div>
+                ))}
+                </div>
+            </ScrollArea>
+
+            {/* Input area: fixed height */}
+            <div className="flex flex-col gap-2 p-4" style={{ height: "25%" }}>
                 <Input
-                    value={prompt}
-                    onChange={(e) => setPrompt(e.target.value)}
-                    placeholder="Prompt"
-                    className="border-2 border-foreground"
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                placeholder="Prompt"
+                className="border-2 border-foreground"
                 />
-                <InputFile setInputFileTxt={setInputFileTxt} setIsInputFile={setIsInputFile}/>
+                <InputFile setInputFileTxt={setInputFileTxt} setIsInputFile={setIsInputFile} />
                 <Button onClick={handleSubmit}>Submit</Button>
             </div>
         </div>

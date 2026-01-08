@@ -39,7 +39,7 @@ const DashBoard = () => {
                 setCurrentModel={setCurrentModel}
             />
                 <SidebarTrigger />
-                <div className="flex flex-col w-full bg-secondary-foreground">
+                <div className="flex flex-col min-h-screen w-full bg-secondary-foreground">
                     <TopBar />
                         <AIText 
                             currentModel={currentModel}

@@ -127,7 +127,7 @@ export type ConversationMessage = {
 
 export type ConversationLog = {
     messages: ConversationMessage[];
-}
+};
 
 export async function getConversationLog(id: number): Promise<ConversationLog> {
     const res = await fetch(`${API_BASE}/getConversationByID`, {
