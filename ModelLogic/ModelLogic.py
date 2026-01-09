@@ -7,10 +7,13 @@ from psycopg.rows import dict_row
 from colorama import Fore
 from chromadb.config import Settings
 
+#chroma db client that persisets
 client = chromadb.PersistentClient(path="./chroma")
 
+#load vector db into memory from persistent storage
 vector_db_name = "messages"
 existing_collections = [c.name for c in client.list_collections()]
+#if already used then the vector db will load from memory or create a new one
 if vector_db_name in existing_collections:
     vector_db = client.get_collection(name=vector_db_name)
     print("loaded existing vector db")
@@ -20,12 +23,14 @@ else:
 
 print(f"Vector DB currently contains {vector_db.count()} items.")
 
+#initial values 
 chatModel = "llama3.1"
 encodingModel = "nomic-embed-text:latest"
 recallMode = False
 searchMode = False
 current_conversation_id = None
 
+#toggle recall mode
 def toggle_recall_mode():
     global recallMode
     if recallMode == True:
@@ -36,6 +41,7 @@ def toggle_recall_mode():
     print(recallMode)
     return recallMode
 
+#toggle search mode
 def toggle_search_mode():
     global searchMode
     if searchMode == True:
@@ -46,19 +52,21 @@ def toggle_search_mode():
     print(searchMode)
     return searchMode
 
+# change chat model
 def set_chat_model(model: str):
     global chatModel
     chatModel = model
     print("New Chat Model: " + model)
     return chatModel
 
+#change vector encoding model
 def set_encoding_model(model: str):
     global encodingModel
     encodingModel = model
     print("New encoding Model: " + model)
     return encodingModel
 
-
+#overarching system prompt for ai assistant
 system_prompt = (
 'You are an AI assistant that has memory of every conversation you have ever had with the user.'
 'On every prompt from the user, the system has checked for any relevant messages you have had with the user.'
@@ -68,6 +76,7 @@ system_prompt = (
 'Just use any useful data from the previous conversations and respond normally as an intelligent AI assistant.'
 )
 
+#initial convo
 convo = [{'role': 'system', 'content': system_prompt}]
 
 
@@ -77,6 +86,7 @@ DB_PARAMS = {
     'host': '/run/postgresql',
 }
 
+#helper functions 
 def list_models():
     result = ollama.list()
     return [model["model"] for model in result["models"]]
@@ -86,6 +96,7 @@ def connect_db():
     conn = psycopg.connect(**DB_PARAMS)
     return conn
 
+#fetch all messages from sql database
 def fetch_all_messages():
     conn = connect_db()
     with conn.cursor(row_factory=dict_row) as cursor:
@@ -93,19 +104,6 @@ def fetch_all_messages():
         messages = cursor.fetchall()
     conn.close()
     return messages
-
-def store_message(prompt, response):
-    message = {'prompt': prompt, 'response': response, 'id': 'some_unique_id_here'}
-    add_message_to_vector_db(message)  # pass a dict
-    conn = connect_db()
-    with conn.cursor() as cursor:
-        cursor.execute(
-            'INSERT INTO messages (timestamp, prompt, response, conversation_id) VALUES (CURRENT_TIMESTAMP, %s, %s, %s)',
-            (prompt, response, current_conversation_id)
-        )
-        conn.commit()
-    conn.close()
-
 
 def remove_last_conversation():#this is broken
     if True:
@@ -117,6 +115,7 @@ def remove_last_conversation():#this is broken
         cursor.commit()
     conn.close()
 
+#creates new conversation and returns conversation id increment from sql
 def start_new_conversation(title):
     conn = connect_db()
     with conn.cursor() as cursor:
@@ -128,13 +127,11 @@ def start_new_conversation(title):
         conn.commit()
     conn.close()
 
-    global convo
-    convo = [{'role': 'system', 'content': system_prompt}]
-
     global current_conversation_id
     current_conversation_id = conversation_id
     return conversation_id
 
+#creates a summary for conversation list gui
 def create_summary(prompt):
     summarize_conversation_msg = (
         'You are a AI agent whos job it is to summarize user prompts into 3 or 4 words maximum.' +
@@ -154,10 +151,7 @@ def create_summary(prompt):
 
     return response['message']['content']
 
-
-
-
-
+#returns a summarized list of the last 20 conversations based of the first prompt of that conversation
 def summarize_conversation_list():
     conn = connect_db()
     with conn.cursor() as cursor:
@@ -184,6 +178,7 @@ def summarize_conversation_list():
         summary_list.append({'summary': summary, 'conversation_id': conversation_id})
     return summary_list
 
+#returns messages for a given conversations
 def get_conversation(conversation_id: int):
     conn = connect_db()
     try:
@@ -203,6 +198,7 @@ def get_conversation(conversation_id: int):
 
     return messages
 
+#not being used right now but this creates the nice stream response as tokens come in need to use in the future
 def stream_response(prompt):
     response = ''
     stream = ollama.chat(model=chatModel, messages=convo, stream=True)
@@ -217,55 +213,14 @@ def stream_response(prompt):
     store_message(prompt=prompt, response=response)
     convo.append({'role': 'assistant', 'content': response})
 
+#response being used right now
 def standard_response(prompt):
     response = ollama.chat(model=chatModel, messages=convo)
     responseString = response["message"]["content"]
-    print(Fore.LIGHTGREEN_EX + '\nASSISTANT: \n ' + responseString)
+    #print(Fore.LIGHTGREEN_EX + '\nASSISTANT: \n ' + responseString + '\n')
     store_message(prompt=prompt, response=responseString)
     convo.append({'role': 'assistant', 'content': responseString})
     return responseString
-
-def add_message_to_vector_db(message):
-    """
-    Adds a message to the Chroma collection.
-    Only adds new messages; avoids duplicating existing ones.
-    """
-    # Get existing data for this ID
-    existing = vector_db.get(ids=[str(message['id'])])
-    existing_ids_list = existing.get('ids', [])
-
-    # Check if any IDs were returned
-    if existing_ids_list and existing_ids_list[0]:
-        print(f"Message {message['id']} already in vector DB. Skipping.")
-        return
-
-    # Create embedding
-    serialized_convo = f"prompt: {message['prompt']} response: {message['response']}"
-    embedding = ollama.embeddings(model=encodingModel, prompt=serialized_convo)['embedding']
-
-    vector_db.add(
-        ids=[str(message['id'])],
-        embeddings=[embedding],
-        documents=[serialized_convo],
-        metadatas=[{"conversation_id": str(message.get('conversation_id', ''))}]
-    )
-    print(f"Added message {message['id']} to vector DB.")
-
-
-
-def load_messages_from_db(messages):
-    """
-    Load messages from PostgreSQL into Chroma if they aren't already in the vector DB.
-    """
-    for m in messages:
-        msg = {
-            'prompt': m['prompt'],
-            'response': m['response'],
-            'id': m['id'],
-            'conversation_id': m.get('conversation_id')
-        }
-        add_message_to_vector_db(msg)
-    print(f"Finished loading messages into vector DB.")
 
 def retrieve_embeddings(queries, results_per_query=2):
     embeddings = set()
@@ -342,42 +297,74 @@ def recall(prompt):
 def search(prompt):
     print("searching")
 
-def initialize_vector_db():
+#store messages add vector to vector db then stores the messages in the sql database
+def store_message(prompt, response):
+    message = {'prompt': prompt, 'response': response, 'id': response + prompt}
+    add_message_to_vector_db(message)
+    conn = connect_db()
+    with conn.cursor() as cursor:
+        cursor.execute(
+            'INSERT INTO messages (timestamp, prompt, response, conversation_id) VALUES (CURRENT_TIMESTAMP, %s, %s, %s)',
+            (prompt, response, current_conversation_id)
+        )
+        conn.commit()
+    conn.close()
+    print(f"Message stored in vector and sql: {prompt} : {response} : id: {current_conversation_id}")
+
+def add_message_to_vector_db(message):
     """
-    Initializes the Chroma vector DB.
-    Loads an existing collection if it exists, or creates a new one.
-    Only adds messages that aren't already in the collection.
+    Adds a message to the Chroma collection.
+    Only adds new messages; avoids duplicating existing ones.
     """
-    global vector_db
+    # Get existing data for this ID
+    existing = vector_db.get(ids=[str(message['id'])])
+    existing_ids_list = existing.get('ids', [])
 
-    existing_collections = [c.name for c in client.list_collections()]
+    # Check if any IDs were returned
+    if existing_ids_list and existing_ids_list[0]:
+        print(f"Message {message['id']} already in vector DB. Skipping.")
+        return
 
-    if vector_db_name in existing_collections:
-        vector_db = client.get_collection(name=vector_db_name)
-        print("Loaded existing vector DB")
-    else:
-        vector_db = client.create_collection(name=vector_db_name)
-        print("Created new vector DB")
+    # Create embedding
+    serialized_convo = f"prompt: {message['prompt']} response: {message['response']}"
+    embedding = ollama.embeddings(model=encodingModel, prompt=serialized_convo)['embedding']
 
-    # Only load messages from PostgreSQL if the collection is empty
-    if vector_db.count() == 0:
-        print("Vector DB is empty, loading messages from PostgreSQL...")
-        messages = fetch_all_messages()
-        for m in messages:
-            # Ensure conversation_id exists
-            if m['conversation_id'] is not None:
-                msg = {
-                    'prompt': m['prompt'],
-                    'response': m['response'],
-                    'id': m['id'],
-                    'conversation_id': m['conversation_id']
-                }
-                add_message_to_vector_db(msg)
-        print(f"Loaded {len(messages)} messages into vector DB")
-    else:
-        print(f"Vector DB already has {vector_db.count()} items. No messages loaded.")
+    vector_db.add(
+        ids=[str(message['id'])],
+        embeddings=[embedding],
+        documents=[serialized_convo],
+    )
 
-initialize_vector_db()
+def load_messages_from_db(messages):
+    """
+    Load messages from PostgreSQL into Chroma if they aren't already in the vector DB.
+    """
+    for m in messages:
+        msg = {
+            'prompt': m['prompt'],
+            'response': m['response'],
+            'id': m['id'],
+        }
+        add_message_to_vector_db(msg)
+    print(f"Finished loading messages into vector DB.")
+
+def retrieve_embeddings(queries, results_per_query=2):
+    embeddings = set()
+
+    for query in tqdm(queries, desc='Processing queries to vector database'):
+        response = ollama.embeddings(model=encodingModel, prompt=query)
+        query_embedding = response['embedding']
+
+        vector_db = client.get_collection(name='messages')
+        results = vector_db.query(query_embeddings=[query_embedding], n_results=results_per_query)
+        best_embeddings = results['documents'][0]
+
+        for best in best_embeddings:
+            if best not in embeddings:
+                if 'yes' in classify_embedding(query=query, context=best):
+                    embeddings.add(best)
+
+    return embeddings
 
 def handle_prompt(prompt: str) -> str:
     global convo
