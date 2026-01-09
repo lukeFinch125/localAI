@@ -67,18 +67,25 @@ def set_encoding_model(model: str):
     return encodingModel
 
 #overarching system prompt for ai assistant
-system_prompt = (
-'You are an AI assistant that has memory of every conversation you have ever had with the user.'
-'On every prompt from the user, the system has checked for any relevant messages you have had with the user.'
-'If any embedded previous conversations are attached, use them for context to responding to the user,'
-'if the context is relevant and useful to responding. If the realled conversation is irrelevant,'
-'disregard speaking about them and respond normally as an AI assistant. Do not talk about recalling conversations.'
-'Just use any useful data from the previous conversations and respond normally as an intelligent AI assistant.'
+normal_system_prompt = (
+    'You are an AI assistant that is in a conversation with a user. You will have access to the entire'
+    'conversation messages history to better assist you in answering their questions. On every prompt from'
+    'the user, the system has checked for any relevant messages you have had with the user in the current'
+    'conversation, if any embedded previous conversations are attached, use them for context to responding to the user,'
+    'if the context is relveant and useful to responding. If the recalled conversation is irrelevant'
+    'disregard speaking about them and respond normally as a intelligent AI assistant. Do not talk about'
+    'recalling past conversations, just use any useful data that is given to you from the system'
 )
 
-#initial convo
-convo = [{'role': 'system', 'content': system_prompt}]
-
+#base prompt used when recall mode is active, telling the model it has access to all previous conversations
+recall_system_prompt = (
+    'You are an AI assistant that has memory of every conversation you have ever had with the user.'
+    'On every prompt from the user, the system has checked for any relevant messages you have had with the user.'
+    'If any embedded previous conversations are attached, use them for context to responding to the user,'
+    'if the context is relevant and useful to responding. If the realled conversation is irrelevant,'
+    'disregard speaking about them and respond normally as an AI assistant. Do not talk about recalling conversations.'
+    'Just use any useful data from the previous conversations and respond normally as an intelligent AI assistant.'
+)
 
 DB_PARAMS = {
     'dbname': 'memory_agent',
@@ -126,7 +133,8 @@ def start_new_conversation(title):
         conversation_id = cursor.fetchone()[0]
         conn.commit()
     conn.close()
-
+    global convo
+    convo = []
     global current_conversation_id
     current_conversation_id = conversation_id
     return conversation_id
@@ -218,8 +226,9 @@ def standard_response(prompt):
     response = ollama.chat(model=chatModel, messages=convo)
     responseString = response["message"]["content"]
     #print(Fore.LIGHTGREEN_EX + '\nASSISTANT: \n ' + responseString + '\n')
-    store_message(prompt=prompt, response=responseString)
-    convo.append({'role': 'assistant', 'content': responseString})
+    if(recallMode == False):
+        store_message(prompt=prompt, response=responseString)
+        convo.append({'role': 'assistant', 'content': responseString})
     return responseString
 
 def retrieve_embeddings(queries, results_per_query=2):
@@ -370,6 +379,10 @@ def retrieve_embeddings(queries, results_per_query=2):
 
     return embeddings
 
+def build_convo(system_prompt):
+    global convo
+    convo = [{'role': 'system', 'content': system_prompt}] + convo
+
 def handle_prompt(prompt: str) -> str:
     global convo
     global recallMode
@@ -380,11 +393,14 @@ def handle_prompt(prompt: str) -> str:
     clean_prompt = prompt.strip()
 
     if recallMode == True:
+        build_convo(recall_system_prompt)
         recall(prompt=clean_prompt)
         response = standard_response(prompt=clean_prompt)
+        print(convo)
         return response, current_conversation_id
 
     elif searchMode == True:
+        build_convo(recall_system_prompt)
         search(clean_prompt)
         response = standard_response(prompt=clean_prompt)
         return response, current_conversation_id
@@ -400,6 +416,8 @@ def handle_prompt(prompt: str) -> str:
         return "Memory stored. "
 
     else:
+        build_convo(normal_system_prompt)
         convo.append({'role': 'user', 'content': clean_prompt})
         response = standard_response(prompt=clean_prompt)
+        print(convo)
         return response, current_conversation_id
