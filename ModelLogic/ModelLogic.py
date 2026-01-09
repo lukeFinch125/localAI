@@ -333,6 +333,10 @@ def add_message_to_vector_db(message):
         ids=[str(message['id'])],
         embeddings=[embedding],
         documents=[serialized_convo],
+        metadatas=[{
+            "prompt": message["prompt"],
+            "response": message["response"],
+        }]
     )
 
 def load_messages_from_db(messages):
