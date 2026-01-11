@@ -167,30 +167,53 @@ def create_summary(prompt):
 
     return response['message']['content']
 
+def enter_ai_conversation_summary_to_db(summary: str, conversation_id: int):
+    conn = connect_db()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                '''
+                UPDATE conversations
+                SET title = %s
+                WHERE conversation_id = %s
+                ''',
+                (summary, conversation_id)
+            )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+
 #returns a summarized list of the last 20 conversations based of the first prompt of that conversation
 def summarize_conversation_list():
     conn = connect_db()
     with conn.cursor() as cursor:
         cursor.execute(
             'WITH first_messages AS ( '
-            '   SELECT DISTINCT ON (conversation_id) '
-            '       conversation_id, '
-            '       prompt, '
-            '       timestamp '
-            '   FROM messages '
-            '   ORDER BY conversation_id DESC, timestamp ASC '
+            '   SELECT DISTINCT ON (m.conversation_id) '
+            '       m.conversation_id, '
+            '       m.prompt, '
+            '       m.timestamp '
+            '   FROM messages m '
+            '   ORDER BY conversation_id DESC, m.timestamp ASC '
             ') '
-            'SELECT conversation_id, prompt '
-            'FROM first_messages '
-            'ORDER BY conversation_id DESC '
+            'SELECT fm.conversation_id, fm.prompt, c.title '
+            'FROM first_messages fm ' \
+            'JOIN conversations c ON fm.conversation_id = c.conversation_id '
+            'ORDER BY fm.conversation_id DESC '
             'LIMIT 20;'
         )
         prompts = cursor.fetchall()
         conn.close()
     
     summary_list = []
-    for conversation_id, prompt_text in prompts:
-        summary = create_summary(prompt_text)
+    for conversation_id, prompt_text, title in prompts:
+        if(title == "New Conversations" or title == "test"):
+            summary = create_summary(prompt_text)
+            enter_ai_conversation_summary_to_db(summary, conversation_id)
+        else:
+            summary = title
         summary_list.append({'summary': summary, 'conversation_id': conversation_id})
     return summary_list
 
@@ -408,7 +431,7 @@ def handle_prompt(prompt: str) -> str:
     global searchMode
     global current_conversation_id
     if current_conversation_id is None:
-        current_conversation_id = start_new_conversation("test")
+        current_conversation_id = start_new_conversation("New Conversation")
     clean_prompt = prompt.strip()
 
     if recallMode == True:

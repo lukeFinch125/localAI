@@ -2,6 +2,7 @@
 
 import { changeCurrentConversationID, conversationSummary, getConversationSummaries } from "@/api/modelClient";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 
 interface conversationListInterface {
@@ -46,7 +47,7 @@ const ConversationsList = ({ currentConversationID, setCurrentConversationID } :
                 <Button 
                     key={conversation.conversation_id}
                     onClick={() => handleNewConversationID(conversation.conversation_id)}
-                    className="w-full h-6.25 bg-background text-white px-1 justify-start hover:bg-foreground hover:text-background"
+                    className={cn("w-full h-6.25 bg-background text-white px-1 justify-start hover:bg-foreground hover:text-background", currentConversationID === conversation.conversation_id && "underline underline-offset-2")}
                 >
                     <span className="block overflow-hidden whitespace-nowrap text-ellipsis">
                         {conversation.summary}
@@ -58,3 +59,4 @@ const ConversationsList = ({ currentConversationID, setCurrentConversationID } :
 }
  
 export default ConversationsList;
+

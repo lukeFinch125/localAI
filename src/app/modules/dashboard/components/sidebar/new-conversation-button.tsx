@@ -14,8 +14,11 @@ const NewConversationButton = ({ setCurrentConversationID }: newConversationButt
     return ( 
         <Button
             onClick={handleClick}
+            className="p-0 border-0 bg-transparent hover:bg-foreground"
         >
-            <PlusIcon />
+            <PlusIcon 
+                size={16}
+            />
         </Button>
      );
 }
