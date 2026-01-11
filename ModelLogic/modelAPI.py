@@ -18,7 +18,8 @@ from ModelLogic import (
     start_new_conversation,
     current_conversation_id,
     summarize_conversation_list,
-    get_conversation
+    get_conversation,
+    change_conversation
 )
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -94,7 +95,7 @@ class SetChatModelRequest(BaseModel):
     chatModel: str
 
 @app.post("/setChatModel")
-def set_chat_model(request: SetChatModelRequest):
+def change_chat_model(request: SetChatModelRequest):
     response = set_chat_model(request.chatModel)
     global chatModel
     chatModel = response
@@ -150,8 +151,7 @@ class conversationIDClass(BaseModel):
 
 @app.post("/setCurrentConversationID", response_model=conversationIDClass)
 def set_current_conversationID(request: conversationIDClass):
-    global current_conversation_id
-    current_conversation_id = request.conversationID
+    current_conversation_id = change_conversation(request.conversationID)
     return {"conversationID": current_conversation_id}
 
 class ConversationMessage(BaseModel):

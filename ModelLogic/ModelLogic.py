@@ -68,11 +68,8 @@ def set_encoding_model(model: str):
 
 #overarching system prompt for ai assistant
 normal_system_prompt = (
-    'You are an AI assistant that is in a conversation with a user. You will have access to the entire'
-    'conversation messages history to better assist you in answering their questions. On every prompt from'
-    'the user, the system has checked for any relevant messages you have had with the user in the current'
-    'conversation, if any embedded previous conversations are attached, use them for context to responding to the user,'
-    'if the context is relveant and useful to responding. If the recalled conversation is irrelevant'
+    'You are an AI assistant that is in a conversation with a user. You will have access to the entire '
+    'conversation messages history to better assist you in answering their questions. If the recalled conversation is irrelevant'
     'disregard speaking about them and respond normally as a intelligent AI assistant. Do not talk about'
     'recalling past conversations, just use any useful data that is given to you from the system'
 )
@@ -138,6 +135,17 @@ def start_new_conversation(title):
     global current_conversation_id
     current_conversation_id = conversation_id
     return conversation_id
+
+def change_conversation(id):
+    global convo
+    global current_conversation_id
+    current_conversation_id = id
+    convo = []
+    rawMessages = get_conversation(current_conversation_id)
+    ollamaMessages = convert_to_ollama_messages(rawMessages)
+    convo.extend(ollamaMessages)
+    print(convo)
+    return current_conversation_id
 
 #creates a summary for conversation list gui
 def create_summary(prompt):
@@ -205,6 +213,17 @@ def get_conversation(conversation_id: int):
         conn.close()
 
     return messages
+
+def convert_to_ollama_messages(raw_messages):
+    """
+    Converts [(prompt, response), ...] into Ollama-compatible messages.
+    """
+    messages = []
+    for prompt, response in raw_messages:
+        messages.append({"role": "user", "content": prompt})
+        messages.append({"role": "assistant", "content": response})
+    return messages
+
 
 #not being used right now but this creates the nice stream response as tokens come in need to use in the future
 def stream_response(prompt):
