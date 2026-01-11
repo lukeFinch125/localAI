@@ -41,12 +41,12 @@ const AISidebar = ({ currentModel, setCurrentModel, currentConversationID, setCu
               >
                 <div className="flex gap-2">
                   <p>Conversations</p>
-                  <NewConversationButton currentConversationID={currentConversationID} setCurrentConversationID={setCurrentConversationID}/>
+                  <NewConversationButton setCurrentConversationID={setCurrentConversationID}/>
                 </div>
               <span className="border border-foreground w-full"/>
               </SidebarGroupLabel>
               <SidebarGroup />
-                <ConversationsList />
+                <ConversationsList currentConversationID={currentConversationID} setCurrentConversationID={setCurrentConversationID}/>
               <SidebarGroup />
             </SidebarContent>
         </Sidebar>

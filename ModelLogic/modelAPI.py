@@ -145,10 +145,14 @@ def get_current_conversationID():
     global current_conversation_id
     return current_conversation_id
 
-
-#get conversation by ID
-class GetConversationRequest(BaseModel):
+class conversationIDClass(BaseModel):
     conversationID: int
+
+@app.post("/setCurrentConversationID", response_model=conversationIDClass)
+def set_current_conversationID(request: conversationIDClass):
+    global current_conversation_id
+    current_conversation_id = request.conversationID
+    return {"conversationID": current_conversation_id}
 
 class ConversationMessage(BaseModel):
     prompt: str
@@ -158,7 +162,7 @@ class GetConversationResponse(BaseModel):
     messages: list[ConversationMessage]
 
 @app.post("/getConversationByID", response_model=GetConversationResponse)
-def get_conversation_by_id(request: GetConversationRequest):
+def get_conversation_by_id(request: conversationIDClass):
     raw = get_conversation(request.conversationID)
     # raw is List[List[str]]
 

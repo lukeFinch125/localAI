@@ -22,7 +22,6 @@ const AIText = ({ currentModel, currentConversationID, setCurrentConversationID 
     const [isInputFile, setIsInputFile] = useState(false);
     const [inputFileTxt, setInputFileTxt] = useState("");
     const [loading, setLoading] = useState(false);
-    const [inConversation, setInConversation] = useState(false);
     const [error, setError] = useState(false);
     const [conversationLog, setConversationLog] = useState<ConversationLog>({
         messages: [],
@@ -30,9 +29,6 @@ const AIText = ({ currentModel, currentConversationID, setCurrentConversationID 
     
     const handleSubmit = async () => {
         try {
-            if (!inConversation) {
-                setInConversation(true);
-            }
             setLoading(true)
             const data = await getResponse(prompt);
             setCurrentConversationID(data.conversationID)
@@ -54,7 +50,6 @@ const AIText = ({ currentModel, currentConversationID, setCurrentConversationID 
             try {
                 const data = await getConversationLog(currentConversationID);
                 setConversationLog(data);
-                console.log(data.messages);
             } catch (err) {
                 setError(true);
             } finally {
@@ -64,7 +59,7 @@ const AIText = ({ currentModel, currentConversationID, setCurrentConversationID 
         loadConversationLog();
     }, [currentConversationID]);
 
-    if(!inConversation) {
+    if(currentConversationID == null) {
         return (
             <div className="flex flex-col h-full justify-center items-center">
                 <div className="h-[35%] w-[80%] flex flex-col items-center gap-8">

@@ -67,7 +67,6 @@ export async function getCurrentModel(): Promise<string> {
 
     const data = (await res.json()) as chatModel;
 
-    console.log(data);
     return data.activeModel;
 }
 
@@ -159,4 +158,24 @@ export async function startNewConversation(): Promise<number> {
     const data = (await res.json()) as conversationID;
 
     return data;
+}
+
+export async function changeCurrentConversationID(newConversationID: number): Promise<conversationID> {
+    const res = await fetch(`${API_BASE}/setCurrentConversationID`, {
+        method: "POST",
+        headers: {
+            "Content-type": "application/json"
+        },
+        body: JSON.stringify({
+            conversationID: newConversationID
+        }),
+    });
+
+    if(!res.ok) {
+        throw new Error("Request failed");
+    }
+
+    const data = await res.json();
+
+    return data.conversationID;
 }
