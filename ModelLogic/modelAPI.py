@@ -130,7 +130,7 @@ def get_recall_mode():
     return recallMode
 
 #start new conversation
-@app.post("/startNewConversation")
+@app.get("/startNewConversation")
 def new_conversation():
     conversation_id = start_new_conversation("test")
     return conversation_id

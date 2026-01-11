@@ -148,3 +148,15 @@ export async function getConversationLog(id: number): Promise<ConversationLog> {
 
     return data;
 }
+
+export async function startNewConversation(): Promise<number> {
+    const res = await fetch(`${API_BASE}/startNewConversation`);
+
+    if(!res.ok) {
+        throw new Error(`Failed to get current conversation ID: ${res.status}`);
+    }
+
+    const data = (await res.json()) as conversationID;
+
+    return data;
+}

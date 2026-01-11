@@ -228,7 +228,7 @@ def standard_response(prompt):
     #print(Fore.LIGHTGREEN_EX + '\nASSISTANT: \n ' + responseString + '\n')
     if(recallMode == False):
         store_message(prompt=prompt, response=responseString)
-        convo.append({'role': 'assistant', 'content': responseString})
+    convo.append({'role': 'assistant', 'content': responseString})
     return responseString
 
 def retrieve_embeddings(queries, results_per_query=2):

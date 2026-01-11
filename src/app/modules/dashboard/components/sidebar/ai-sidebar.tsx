@@ -10,13 +10,16 @@ import {
 } from "@/components/ui/sidebar"
 import ModelList from "./ai-models-list";
 import ConversationsList from "./conversation-list";
+import NewConversationButton from "./new-conversation-button";
 
 interface AISidebarIntereface {
   currentModel: string;
   setCurrentModel: (model: string) => void;
+  currentConversationID: number;
+  setCurrentConversationID: (model: number) => void;
 }
 
-const AISidebar = ({ currentModel, setCurrentModel}: AISidebarIntereface) => {
+const AISidebar = ({ currentModel, setCurrentModel, currentConversationID, setCurrentConversationID}: AISidebarIntereface) => {
     return (
         <Sidebar>
             <SidebarContent
@@ -35,7 +38,11 @@ const AISidebar = ({ currentModel, setCurrentModel}: AISidebarIntereface) => {
               <SidebarGroup />
               <SidebarGroupLabel
                 className="text-foreground text-2xl px-5 flex flex-col"
-              ><p>Conversations</p>
+              >
+                <div className="flex gap-2">
+                  <p>Conversations</p>
+                  <NewConversationButton currentConversationID={currentConversationID} setCurrentConversationID={setCurrentConversationID}/>
+                </div>
               <span className="border border-foreground w-full"/>
               </SidebarGroupLabel>
               <SidebarGroup />

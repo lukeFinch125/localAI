@@ -37,6 +37,8 @@ const DashBoard = () => {
             <AISidebar 
                 currentModel={currentModel}
                 setCurrentModel={setCurrentModel}
+                currentConversationID={currentConversationID}
+                setCurrentConversationID={setCurrentConversationID}
             />
                 <SidebarTrigger />
                 <div className="flex flex-col min-h-screen w-full bg-secondary-foreground">
