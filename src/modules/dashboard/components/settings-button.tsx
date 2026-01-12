@@ -1,10 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { SettingsIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 const SettingsButton = () => {
 
+    const router = useRouter();
     const onClick = () => {
-        console.log("Button Clicked");
+        router.push("/settings");
     }
 
 
