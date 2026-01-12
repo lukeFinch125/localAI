@@ -34,7 +34,7 @@ const GaugeBar = () => {
 
         loadStats(); // run immediately once
 
-        const interval = setInterval(loadStats, 100000);
+        const interval = setInterval(loadStats, 10000);
 
         return () => {
             isMounted = false;

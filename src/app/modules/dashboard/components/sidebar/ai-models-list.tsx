@@ -53,9 +53,6 @@ const ModelList = ({ currentModel, setCurrentModel}: AISidebarIntereface) => {
                     </span>
                 </Button>
             ))}
-            <Button className="border-2 border-chart-3 bg-background">
-                <PlusIcon />
-            </Button>
         </ul>
     );
 };

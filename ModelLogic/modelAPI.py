@@ -1,7 +1,6 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 import psutil
-import pyamdgpuinfo
 from typing import List
 
 # import your existing logic
@@ -19,7 +18,8 @@ from ModelLogic import (
     current_conversation_id,
     summarize_conversation_list,
     get_conversation,
-    change_conversation
+    change_conversation,
+    get_amd_gpu_usage
 )
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -43,16 +43,13 @@ app.add_middleware(
 @app.get("/stats")
 def stats():
 
-    pyamdgpuinfo.detect_gpus()
-    first_gpu = pyamdgpuinfo.get_gpu(0)
-    vram_usage = first_gpu.query_vram_usage()
 
-    percent_vram_usage = vram_usage / 16000000000
+
 
     return {
         "cpu": psutil.cpu_percent(),
         "memory": psutil.virtual_memory().percent,
-        "gpu": round(percent_vram_usage),
+        "gpu": get_amd_gpu_usage(),
     }
 
 @app.get("/")

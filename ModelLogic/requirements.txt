@@ -6,7 +6,7 @@ ollama==0.6.1
 fastapi==0.124.4
 uvicorn[standard]==0.38.0
 psutil==7.2.0
-pyamdgpuinfo==2.1.7
 umap-learn==0.5.9.post2
 pandas==2.3.3
 plotly==6.5.1
+#radeontop

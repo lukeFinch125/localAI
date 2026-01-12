@@ -42,7 +42,7 @@ const DashBoard = () => {
             />
                 <SidebarTrigger />
                 <div className="flex flex-col min-h-screen w-full bg-secondary-foreground">
-                    <TopBar />
+                    <TopBar currentModel={currentModel}/>
                         <AIText 
                             currentModel={currentModel}
                             currentConversationID={currentConversationID}

@@ -6,6 +6,8 @@ from tqdm import tqdm
 from psycopg.rows import dict_row
 from colorama import Fore
 from chromadb.config import Settings
+import subprocess
+import re
 
 #chroma db client that persisets
 client = chromadb.PersistentClient(path="./chroma")
@@ -90,10 +92,32 @@ DB_PARAMS = {
     'host': '/run/postgresql',
 }
 
-#helper functions 
 def list_models():
     result = ollama.list()
-    return [model["model"] for model in result["models"]]
+    models = [model["model"] for model in result["models"]]
+    
+    cleaned_models = []
+    for m in models:
+        if m.startswith("nomic-embed-text"):
+            continue 
+        if m.endswith(":latest"):
+            m = m[:-7] 
+        cleaned_models.append(m)
+    
+    return cleaned_models
+
+def get_amd_gpu_usage():
+    result = subprocess.run(
+        ["radeontop", "-d", "-", "-l", "1"],
+        capture_output=True,
+        text=True
+    )
+
+    match = re.search(r"gpu\s+([\d.]+)%", result.stdout)
+    if match:
+        return float(match.group(1))
+    return None
+
 
 
 def connect_db():
