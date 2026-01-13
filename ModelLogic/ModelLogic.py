@@ -143,6 +143,13 @@ def remove_last_conversation():#this is broken
         cursor.commit()
     conn.close()
 
+def remove_last_message():
+    conn = connect_db()
+    with conn.cursor() as cursor:
+        cursor.execute(
+            ''
+        )
+
 #creates new conversation and returns conversation id increment from sql
 def start_new_conversation(title):
     conn = connect_db()
