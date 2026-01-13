@@ -6,7 +6,7 @@ import AISidebar from "../components/sidebar/ai-sidebar";
 import { useEffect, useState } from "react";
 import { conversationID, getConversationID, getCurrentModel } from "@/api/modelClient";
 import ControlBar from "../components/gauges/Guage-bar";
-import TopBar from "../components/top-bar";
+import TopBar from "../components/sidebar/top-bar";
 
 const DashBoard = () => {
 

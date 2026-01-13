@@ -3,13 +3,15 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useEffect, useRef, useState } from "react";
-import InputFile from "./input-file";
+import InputFile from "./input/input-file";
 import { Console } from "console";
 import { getConversationLog, getResponse } from "@/api/modelClient";
 import { ChevronUp, PlusIcon } from "lucide-react";
 import { ConversationLog } from "@/api/modelClient";
 import { stringify } from "querystring";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Textarea } from "@/components/ui/textarea";
+import ReactMarkdown from "react-markdown"
 
 interface AIItextInteface {
     currentModel: string;
@@ -35,7 +37,7 @@ const AIText = ({ currentModel, currentConversationID, setCurrentConversationID 
 
             const updatedLog = await getConversationLog(data.conversationID);
             setConversationLog(updatedLog);
-
+            
         } catch (err) {
             console.log(err);
         } finally {
@@ -92,13 +94,17 @@ const AIText = ({ currentModel, currentConversationID, setCurrentConversationID 
             <ScrollArea className="flex-1 overflow-auto p-4">
                 <div className="flex flex-col gap-4">
                 {conversationLog?.messages.map((message) => (
-                    <div key={message.response} className="flex flex-col gap-2">
+                    <div key={message.response} className="flex flex-col gap-5">
                     <div className="flex justify-end">
-                        <div className="border border-foreground p-1 rounded-sm">
+                        <div className="border border-foreground p-1 rounded-sm whitespace-pre-wrap">
                         {message.prompt}
                         </div>
                     </div>
-                    <div className="text-white">{message.response}</div>
+                        <div className="text-white prose prose-invert max-w-none whitespace-pre-wrap">
+                            <ReactMarkdown>
+                                {message.response}
+                            </ReactMarkdown>
+                        </div>
                     </div>
                 ))}
                 </div>
@@ -106,11 +112,18 @@ const AIText = ({ currentModel, currentConversationID, setCurrentConversationID 
 
             {/* Input area: fixed height */}
             <div className="flex flex-col gap-2 p-4" style={{ height: "25%" }}>
-                <Input
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                placeholder="Prompt"
-                className="border-2 border-foreground"
+                <Textarea
+                    value={prompt}
+                    onChange={(e) => {
+                        setPrompt(e.target.value)
+
+                        const el = e.target
+                        el.style.height = "auto"
+                        el.style.height = `${Math.min(el.scrollHeight, 200)}px`
+                    }}
+                    placeholder="Prompt"
+                    className="border-2 border-foreground resize-none overflow-auto"
+                    style={{ maxHeight: "200px" }}
                 />
                 <InputFile setInputFileTxt={setInputFileTxt} setIsInputFile={setIsInputFile} />
                 <Button onClick={handleSubmit}>Submit</Button>

@@ -1,4 +1,4 @@
-import GaugeBar from "./gauges/Guage-bar";
+import GaugeBar from "../gauges/Guage-bar";
 import SettingsButton from "./settings-button";
 
 interface topBarInterface {
