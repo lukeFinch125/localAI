@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import InputFile from "./input/input-file";
 import { Console } from "console";
 import { getConversationLog, getResponse } from "@/api/modelClient";
-import { ChevronUp, PlusIcon } from "lucide-react";
+import { ChevronUp, CopyIcon, PencilIcon, PlusIcon, RotateCcwIcon, SplitIcon, ThumbsDownIcon } from "lucide-react";
 import { ConversationLog } from "@/api/modelClient";
 import { stringify } from "querystring";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -44,6 +44,32 @@ const AIText = ({ currentModel, currentConversationID, setCurrentConversationID 
             setLoading(false);
         }
     };
+
+    const handleCopy = async(message: string) => {
+        try {
+            await window.navigator.clipboard.writeText(message);
+        } catch (err) {
+            console.error(
+                "unable to copy to clipboard"
+            );
+        }
+    }
+
+    const handleEdit = (message: string) => {
+        setPrompt(message);
+    }
+
+     const handleBranchConversation = (prompt: string, message: string) => {
+        console.log("Copy message: \n" + message);
+    }
+
+     const handleDeleteResponse = (response: string) => {
+        console.log("delete response: \n" + response);
+    }
+
+     const handleRedo = (response: string) => {
+        console.log("redo response: \n" + response);
+    }
 
     useEffect(() => {
         if (currentConversationID == null) return;
@@ -92,18 +118,62 @@ const AIText = ({ currentModel, currentConversationID, setCurrentConversationID 
         <div className="flex flex-col h-screen">
             {/* Scrollable area: takes all remaining space */}
             <ScrollArea className="flex-1 overflow-auto p-4">
-                <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-5">
                 {conversationLog?.messages.map((message) => (
                     <div key={message.response} className="flex flex-col gap-5">
                     <div className="flex justify-end">
-                        <div className="border border-foreground p-1 rounded-sm whitespace-pre-wrap">
-                        {message.prompt}
+                        <div className="flex flex-col">
+                            <div className="whitespace-pre-wrap py-1 px-2 border border-foreground rounded-sm">
+                            {message.prompt}
+                            </div>
+                            <div className="flex justify-end p-1 gap-2">
+                                <Button
+                                    onClick={() => {handleCopy(message.prompt)}}
+                                    className="bg-transparent hover:bg-transparent text-white hover:text-foreground"
+                                >
+                                    <CopyIcon />
+                                </Button>
+                                <Button
+                                    className="bg-transparent hover:bg-transparent text-white hover:text-foreground"
+                                    onClick={() => {handleEdit(message.prompt)}}
+                                >
+                                    <PencilIcon />
+                                </Button>
+                            </div>
                         </div>
                     </div>
-                        <div className="text-white prose prose-invert max-w-none whitespace-pre-wrap">
-                            <ReactMarkdown>
-                                {message.response}
-                            </ReactMarkdown>
+                        <div className="flex flex-col">
+                            <div className="border-2 border-white  rounded-sm py-1 px-2 text-white prose prose-invert max-w-none whitespace-pre-wrap">
+                                <ReactMarkdown>
+                                    {message.response}
+                                </ReactMarkdown>
+                            </div>
+                            <div>
+                                <Button
+                                    className="bg-transparent hover:bg-transparent text-white hover:text-foreground"
+                                    onClick={() => handleCopy(message.response)}
+                                >
+                                    <CopyIcon />
+                                </Button>
+                                <Button
+                                    className="bg-transparent hover:bg-transparent text-white hover:text-foreground"
+                                    onClick={() => {handleRedo(message.response)}}
+                                >
+                                    <RotateCcwIcon />
+                                </Button>
+                                <Button
+                                    className="bg-transparent hover:bg-transparent text-white hover:text-foreground"
+                                    onClick={() => {handleBranchConversation(message.prompt, message.response)}}
+                                >
+                                    <SplitIcon />
+                                </Button>
+                                <Button
+                                    className="bg-transparent hover:bg-transparent text-white hover:text-foreground"
+                                    onClick={() => {handleDeleteResponse(message.response)}}
+                                >
+                                    <ThumbsDownIcon />
+                                </Button>
+                            </div>
                         </div>
                     </div>
                 ))}

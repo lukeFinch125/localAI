@@ -63,7 +63,7 @@ def read_activeModel():
     return {"activeModel" : chatModel}
 
 @app.get("/encodingModel")
-def read_activeModel():
+def read_encodingModel():
     return {"encodingModel" : encodingModel}
 
 #prompt base api
