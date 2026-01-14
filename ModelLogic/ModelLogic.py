@@ -133,22 +133,54 @@ def fetch_all_messages():
     conn.close()
     return messages
 
-def remove_last_conversation():#this is broken
-    if True:
-        print("Need to fix remove last conversation")
-        return
-    conn = connect_db()
-    with conn.cursor() as cursor:
-        cursor.execute('DELETE FROM conversations WHERE id = (SELECT MAX(id) FROM conversations)')
-        cursor.commit()
-    conn.close()
-
-def remove_last_message():
+def remove_last_message_in_conversation():
+    print("Current conversation id")
+    print(current_conversation_id)
     conn = connect_db()
     with conn.cursor() as cursor:
         cursor.execute(
-            ''
+            '''
+            SELECT id, prompt, response 
+            FROM messages 
+            WHERE conversation_id = %s 
+            ORDER by id DESC 
+            LIMIT 1 
+            ''',
+            (current_conversation_id,)
         )
+
+        row = cursor.fetchone()
+
+        if row is None:
+            conn.close()
+            return {
+                "result": "No message to delete"
+            }
+        
+        message_id, prompt, response = row
+
+        cursor.execute(
+            '''
+            DELETE FROM messages
+            WHERE id = %s
+            ''',
+            (message_id,)
+        )
+        conn.commit()
+    conn.close()
+
+    delete_message_from_vector_db(str(message_id))
+
+    return {
+        "result": f"Deleted message id: {message_id}"
+    }
+    
+def delete_message_from_vector_db(message_id:str):
+    try:
+        vector_db.delete(ids=[message_id])
+        print(f"Deleted Vector entry id={message_id}")
+    except Exception as e:
+        print(f"Vector delete failed for id={message_id}: {e}")
 
 #creates new conversation and returns conversation id increment from sql
 def start_new_conversation(title):
@@ -167,6 +199,26 @@ def start_new_conversation(title):
     current_conversation_id = conversation_id
     return conversation_id
 
+def branch_conversation(prompt: str, response: str):
+    conn = connect_db()
+    with conn.cursor() as cursor:
+        cursor.execute(
+            "INSERT INTO conversations (title) VALUES ('New conversation') RETURNING conversation_id"
+        )
+        conversation_id = cursor.fetchone()[0]
+        conn.commit()
+    conn.close()
+    global convo
+    convo = []
+    convo.append({"role": "user", "content": prompt})
+    convo.append({"role": "assistant", "content": response})
+    global current_conversation_id
+    current_conversation_id = conversation_id
+    store_message(prompt, response)
+    return {
+        "result": current_conversation_id
+    }
+
 def change_conversation(id):
     global convo
     global current_conversation_id
@@ -175,7 +227,6 @@ def change_conversation(id):
     rawMessages = get_conversation(current_conversation_id)
     ollamaMessages = convert_to_ollama_messages(rawMessages)
     convo.extend(ollamaMessages)
-    print(convo)
     return current_conversation_id
 
 #creates a summary for conversation list gui
@@ -381,17 +432,20 @@ def search(prompt):
 
 #store messages add vector to vector db then stores the messages in the sql database
 def store_message(prompt, response):
-    message = {'prompt': prompt, 'response': response, 'id': response + prompt}
-    add_message_to_vector_db(message)
     conn = connect_db()
+
     with conn.cursor() as cursor:
         cursor.execute(
-            'INSERT INTO messages (timestamp, prompt, response, conversation_id) VALUES (CURRENT_TIMESTAMP, %s, %s, %s)',
+            'INSERT INTO messages (timestamp, prompt, response, conversation_id) VALUES (CURRENT_TIMESTAMP, %s, %s, %s) RETURNING id',
             (prompt, response, current_conversation_id)
         )
+        message_id = cursor.fetchone()[0]
         conn.commit()
     conn.close()
-    print(f"Message stored in vector and sql: {prompt} : {response} : id: {current_conversation_id}")
+
+    message = {'prompt': prompt, 'response': response, 'id': message_id}
+    add_message_to_vector_db(message)
+    print(f"Message stored in vector and sql: {prompt}\n : {response}\n : message-id: {message_id}\n conversation-id: {current_conversation_id}\n")
 
 def add_message_to_vector_db(message):
     """
@@ -469,7 +523,6 @@ def handle_prompt(prompt: str) -> str:
         build_convo(recall_system_prompt)
         recall(prompt=clean_prompt)
         response = standard_response(prompt=clean_prompt)
-        print(convo)
         return response, current_conversation_id
 
     elif searchMode == True:
@@ -479,7 +532,6 @@ def handle_prompt(prompt: str) -> str:
         return response, current_conversation_id
 
     elif clean_prompt.lower().startswith("/forget"):
-        remove_last_conversation()
         convo = convo[:-2]
         return "Forgotten by Model"
         
@@ -492,5 +544,4 @@ def handle_prompt(prompt: str) -> str:
         build_convo(normal_system_prompt)
         convo.append({'role': 'user', 'content': clean_prompt})
         response = standard_response(prompt=clean_prompt)
-        print(convo)
         return response, current_conversation_id
