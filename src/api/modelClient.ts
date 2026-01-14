@@ -179,3 +179,43 @@ export async function changeCurrentConversationID(newConversationID: number): Pr
 
     return data.conversationID;
 }
+
+export type removeMessageResult = {
+    result: string
+}
+
+export async function removeLastMessageInConversation(): Promise<removeMessageResult> {
+    const res = await fetch(
+        `${API_BASE}/deleteLastMessageInConversation`,
+        {
+            method: "POST",
+        }
+    );
+
+    if (!res.ok) {
+        throw new Error(`Failed to remove last message: ${res.status}`);
+    }
+
+    return (await res.json()) as removeMessageResult;
+}
+
+export async function branchConversation(prompt: string, response: string): Promise<conversationID> {
+    const res = await fetch(`${API_BASE}/branchConversation`, {
+        method: "POST",
+        headers: {
+            "Content-type": "application/json"
+        },
+        body: JSON.stringify({
+            prompt: prompt,
+            response: response
+        }),
+    });
+
+    if(!res.ok) {
+        throw new Error("Request failed");
+    }
+
+    const data = await res.json();
+
+    return data.result;
+}
