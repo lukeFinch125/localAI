@@ -21,7 +21,8 @@ from ModelLogic import (
     change_conversation,
     get_amd_gpu_usage,
     remove_last_message_in_conversation,
-    branch_conversation
+    branch_conversation,
+    delete_conversation_and_messages
 )
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -163,7 +164,7 @@ def get_conversation_by_id(request: conversationIDClass):
     # raw is List[List[str]]
 
     messages = [
-        ConversationMessage(prompt=msg[0], response=msg[1])
+        ConversationMessage(prompt=msg[1], response=msg[2])
         for msg in raw
     ]
 
@@ -176,3 +177,8 @@ def deleteLastMessageInConversation():
 @app.post("/branchConversation")
 def branchConversation(request: ConversationMessage):
     return branch_conversation(request.prompt, request.response)
+
+@app.post("/deleteConversation")
+def deleteConversation(request: conversationIDClass):
+    delete_conversation_and_messages(request.conversationID)
+    return request.conversationID

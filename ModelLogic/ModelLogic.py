@@ -174,8 +174,8 @@ def remove_last_message_in_conversation():
     return {
         "result": f"Deleted message id: {message_id}"
     }
-    
-def delete_message_from_vector_db(message_id:str):
+
+def delete_message_from_vector_db(message_id:int):
     try:
         vector_db.delete(ids=[message_id])
         print(f"Deleted Vector entry id={message_id}")
@@ -198,6 +198,20 @@ def start_new_conversation(title):
     global current_conversation_id
     current_conversation_id = conversation_id
     return conversation_id
+
+def delete_conversation_from_db(conversation_id: str):
+    conn = connect_db()
+    with conn.cursor() as cursor:
+        cursor.execute(
+            '''
+            DELETE FROM conversations
+            WHERE conversation_id = %s
+            ''',
+            (conversation_id,)
+        )
+        conn.commit()
+    conn.close()
+    print(f"Conversation deleted: {conversation_id}")
 
 def branch_conversation(prompt: str, response: str):
     conn = connect_db()
@@ -265,6 +279,13 @@ def enter_ai_conversation_summary_to_db(summary: str, conversation_id: int):
     finally:
         conn.close()
 
+def delete_conversation_and_messages(conversation_id: int):
+    messages = get_conversation(conversation_id)
+    print(messages)
+    for message in messages:
+        delete_message_from_vector_db(message[0])
+    delete_conversation_from_db(conversation_id)
+    
 
 
 #returns a summarized list of the last 20 conversations based of the first prompt of that conversation
@@ -306,7 +327,7 @@ def get_conversation(conversation_id: int):
         with conn.cursor() as cursor:
             cursor.execute(
                 """
-                SELECT prompt, response
+                SELECT id, prompt, response 
                 FROM messages
                 WHERE conversation_id = %s
                 ORDER BY timestamp;
@@ -324,7 +345,7 @@ def convert_to_ollama_messages(raw_messages):
     Converts [(prompt, response), ...] into Ollama-compatible messages.
     """
     messages = []
-    for prompt, response in raw_messages:
+    for id, prompt, response in raw_messages:
         messages.append({"role": "user", "content": prompt})
         messages.append({"role": "assistant", "content": response})
     return messages
@@ -522,6 +543,7 @@ def handle_prompt(prompt: str) -> str:
     if recallMode == True:
         build_convo(recall_system_prompt)
         recall(prompt=clean_prompt)
+        print(convo)
         response = standard_response(prompt=clean_prompt)
         return response, current_conversation_id
 

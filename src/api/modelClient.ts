@@ -219,3 +219,24 @@ export async function branchConversation(prompt: string, response: string): Prom
 
     return data.result;
 }
+
+export async function deleteConversation(conversation_id: number): Promise<conversationID> {
+    const res = await fetch(`${API_BASE}/deleteConversation`, {
+        method: "POST",
+        headers: {
+            "Content-type": "application/json"
+        },
+        body: JSON.stringify({
+            conversationID: conversation_id
+        }),
+    });
+
+    if(!res.ok) {
+        throw new Error("Request failed");
+    }
+
+    const data = await res.json();
+
+    return data;
+}
+

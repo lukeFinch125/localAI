@@ -12,14 +12,18 @@ const NewConversationButton = ({ setCurrentConversationID }: newConversationButt
         setCurrentConversationID(newConversationID);
     }
     return ( 
-        <Button
-            onClick={handleClick}
-            className="p-0 border-0 bg-transparent hover:bg-foreground"
-        >
-            <PlusIcon 
-                size={16}
-            />
-        </Button>
+        <div className="flex flex-col items-start justify-between w-full">
+            <Button
+                onClick={handleClick}
+                className="p-0 border-0 bg-transparent hover:bg-foreground text-foreground hover:text-background"
+            >
+                <h6>New Conversation</h6>
+                <PlusIcon 
+                    size={16}
+                    className="text-foreground"
+                />
+            </Button>
+        </div>
      );
 }
  
