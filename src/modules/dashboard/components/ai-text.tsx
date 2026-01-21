@@ -4,11 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useEffect, useRef, useState } from "react";
 import InputFile from "./input/input-file";
-import { Console } from "console";
 import { branchConversation, getConversationLog, getResponse, removeLastMessageInConversation } from "@/api/modelClient";
 import { ChevronUp, CopyIcon, PencilIcon, PlusIcon, RotateCcwIcon, SplitIcon, ThumbsDownIcon } from "lucide-react";
 import { ConversationLog } from "@/api/modelClient";
-import { stringify } from "querystring";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import ReactMarkdown from "react-markdown"
@@ -37,6 +35,7 @@ const AIText = ({ currentModel, currentConversationID, setCurrentConversationID 
             setCurrentConversationID(data.conversationID)
 
             const updatedLog = await getConversationLog(data.conversationID);
+            console.log(updatedLog);
             setConversationLog(updatedLog);
             
         } catch (err) {

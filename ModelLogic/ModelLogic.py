@@ -32,6 +32,12 @@ recallMode = False
 searchMode = False
 current_conversation_id = None
 
+def getCurrentConversationID():
+    global current_conversation_id
+    print("Current conversation ID: ")
+    print(current_conversation_id)
+    return current_conversation_id
+
 #toggle recall mode
 def toggle_recall_mode():
     global recallMode
@@ -195,9 +201,7 @@ def start_new_conversation(title):
     conn.close()
     global convo
     convo = []
-    global current_conversation_id
-    current_conversation_id = conversation_id
-    return conversation_id
+    change_conversation(conversation_id)
 
 def delete_conversation_from_db(conversation_id: str):
     conn = connect_db()
@@ -237,6 +241,8 @@ def change_conversation(id):
     global convo
     global current_conversation_id
     current_conversation_id = id
+    print("New conversation id: ")
+    print(current_conversation_id)
     convo = []
     rawMessages = get_conversation(current_conversation_id)
     ollamaMessages = convert_to_ollama_messages(rawMessages)
@@ -371,8 +377,7 @@ def standard_response(prompt):
     response = ollama.chat(model=chatModel, messages=convo)
     responseString = response["message"]["content"]
     #print(Fore.LIGHTGREEN_EX + '\nASSISTANT: \n ' + responseString + '\n')
-    if(recallMode == False):
-        store_message(prompt=prompt, response=responseString)
+    store_message(prompt=prompt, response=responseString)
     convo.append({'role': 'assistant', 'content': responseString})
     return responseString
 
@@ -530,6 +535,7 @@ def retrieve_embeddings(queries, results_per_query=2):
 def build_convo(system_prompt):
     global convo
     convo = [{'role': 'system', 'content': system_prompt}] + convo
+    print(convo)
 
 def handle_prompt(prompt: str) -> str:
     global convo
@@ -543,8 +549,8 @@ def handle_prompt(prompt: str) -> str:
     if recallMode == True:
         build_convo(recall_system_prompt)
         recall(prompt=clean_prompt)
-        print(convo)
         response = standard_response(prompt=clean_prompt)
+        print(response)
         return response, current_conversation_id
 
     elif searchMode == True:

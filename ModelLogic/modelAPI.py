@@ -22,7 +22,8 @@ from ModelLogic import (
     get_amd_gpu_usage,
     remove_last_message_in_conversation,
     branch_conversation,
-    delete_conversation_and_messages
+    delete_conversation_and_messages,
+    getCurrentConversationID
 )
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -140,8 +141,7 @@ def get_conversation_list():
 #get current conversation ID
 @app.get("/getCurrentConversationID")
 def get_current_conversationID():
-    global current_conversation_id
-    return current_conversation_id
+    return getCurrentConversationID()
 
 class conversationIDClass(BaseModel):
     conversationID: int
