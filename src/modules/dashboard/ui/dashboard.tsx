@@ -12,7 +12,7 @@ const DashBoard = () => {
 
     const [currentModel, setCurrentModel] = useState<string>("");
     const [loading, setLoading] = useState(true);
-    const [currentConversationID, setCurrentConversationID] = useState<conversationID>(0)
+    const [currentConversationID, setCurrentConversationID] = useState<conversationID>(0);
 
     useEffect(() => {
         const fetchCurrentModel = async () => {

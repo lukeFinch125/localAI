@@ -39,13 +39,19 @@ def getCurrentConversationID():
     return current_conversation_id
 
 #toggle recall mode
-def toggle_recall_mode():
+def toggleRecallMode():
     global recallMode
     if recallMode == True:
         recallMode = False
     else:
         recallMode = True
     print("Toggled Recall Mode: ")
+    print(recallMode)
+    return recallMode
+
+def getRecallMode():
+    global recallMode
+    print("Current Recall Mode: ")
     print(recallMode)
     return recallMode
 

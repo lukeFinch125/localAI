@@ -10,7 +10,7 @@ from ModelLogic import (
     handle_prompt,
     list_models,
     set_chat_model,
-    toggle_recall_mode,
+    toggleRecallMode,
     toggle_search_mode,
     searchMode,
     recallMode,
@@ -23,7 +23,8 @@ from ModelLogic import (
     remove_last_message_in_conversation,
     branch_conversation,
     delete_conversation_and_messages,
-    getCurrentConversationID
+    getCurrentConversationID,
+    getRecallMode
 )
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -103,7 +104,7 @@ def change_chat_model(request: SetChatModelRequest):
 
 
 #Search Mode
-@app.post("/ToggleSearchMode")
+@app.post("/toggleSearchMode")
 def flip_search_mode():
     response = toggle_search_mode()
     return response
@@ -116,17 +117,15 @@ def get_search_mode():
     return searchMode
 
 #Recall Mode
-@app.post("/ToggleRecallMode")
-def flip_recall_mode():
-    response = toggle_recall_mode()
+@app.post("/toggleRecallMode")
+def toggle_recall_mode():
+    response = toggleRecallMode()
     return response
 
 @app.get("/getRecallMode")
 def get_recall_mode():
-    global recallMode
-    print("Recall Mode:")
-    print(recallMode)
-    return recallMode
+    response = getRecallMode()
+    return response
 
 #start new conversation
 @app.get("/startNewConversation")

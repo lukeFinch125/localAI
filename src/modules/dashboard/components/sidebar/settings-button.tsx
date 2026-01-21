@@ -12,7 +12,7 @@ const SettingsButton = () => {
 
     return ( 
         <Button 
-            className="absolute top-1 right-1 bg-transparent hover:bg-transparent hover:text-foreground"
+            className="bg-transparent hover:bg-transparent hover:text-foreground"
             onClick={onClick}
         >
             <SettingsIcon />

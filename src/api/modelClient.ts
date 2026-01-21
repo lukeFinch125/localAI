@@ -240,3 +240,29 @@ export async function deleteConversation(conversation_id: number): Promise<conve
     return data;
 }
 
+export async function toggleRecallMode(): Promise<boolean> {
+    const res = await fetch(`${API_BASE}/toggleRecallMode`, {
+        method: "POST"
+    });
+
+    if(!res.ok) {
+        throw new Error(`Failed to toggle recall mode: ${res.status}`);
+    }
+
+    const data = (await res.json()) as boolean;
+
+    return data;
+}
+
+export async function getRecallMode(): Promise<boolean> {
+    const res = await fetch(`${API_BASE}/getRecallMode`);
+
+    if(!res.ok) {
+        throw new Error(`Failed to toggle recall mode: ${res.status}`);
+    }
+
+    const data = (await res.json()) as boolean;
+
+    return data;
+}
+
